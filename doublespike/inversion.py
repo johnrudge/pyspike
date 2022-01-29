@@ -73,14 +73,58 @@ def dsinversion(isodata, measured, spike=None, isoinv=None, standard=None):
     T = ratio(spike, isoinv)
     m = ratio(measured,isoinv)
     
-    options = None
     z = np.zeros((nmeasured,3))
     for i in range(nobs):
-        z[i,:] = dscorrection(P,n[i,:],T[i,:],m[i,:],options)
+        z[i,:] = dscorrection(P,n[i,:],T[i,:],m[i,:],xtol=1e-12)
+    out = {}
+    lambda_ = z[:,0]
+    out['alpha'] = z[:,1]
+    out['beta'] = z[:,2]
     
-    return z
+    isonum = np.arange(isodata.nisos())
+    isonum = isonum[isonum != isoinv[0]]
+    isonum = np.concatenate((np.array([isoinv[0]]), isonum))
+    
+    AP = np.log(ratio(idat.mass, isonum))
+    AT = ratio(spike, isonum)
+    An = ratio(standard, isonum)
+    Am = ratio(measured, isonum)
+    
+    # Calculate sample and mixture proportion, and proportion by mole
+    AM = np.zeros_like(Am)
+    AN = np.zeros_like(Am)
+    for i in np.arange(nobs):
+        AM[i,:] = Am[i,:]*np.exp(- AP * out['beta'][i])
+        AN[i,:] = Am[i,:]*np.exp(- AP * out['alpha'][i])
+        prop = ratioproptorealprop(np.array([lambda_[i],(1 - lambda_[i])]),np.array([AT[i,:],AN[i,:]]))
+        out.prop[i,0] = prop[0]
+    
+    return out
 
-def dscorrection(P, n, T, m, options): 
+def ratioproptorealprop(ratprop, ratios): 
+    # convert a proportion in ratio space to one per mole
+    nratios = ratios.shape[1]
+    nratprops = len(ratprop)
+
+    invpropdenom = np.sum(np.vstack((np.ones(nratios),ratios)), axis = 0)
+    print(invpropdenom)
+    #newinvpropdenom = np.matlib.repmat(invpropdenom,np.array([nratprops,1]))
+    newinvpropdenom = np.tile(invpropdenom,(nratprops,1))
+    print(newinvpropdenom)                          
+                              
+    prop = ratprop*newinvpropdenom.T
+    print("prop1",prop)
+    sprop = np.sum(prop, 0)
+    print(sprop)
+    #sprop = np.matlib.repmat(sprop,np.array([1,nratios]))
+    sprop = np.tile(sprop,(nratios,1))
+    prop = prop / sprop
+    print("prop",prop)
+    return prop
+
+
+
+def dscorrection(P, n, T, m, **kwargs): 
     # Routine for double spike fractionation correction
     # takes as input ratios:
     #       P -- log of ratio of atomic masses
@@ -95,13 +139,8 @@ def dscorrection(P, n, T, m, options):
     A = np.array([np.transpose((T - n)),np.transpose((np.multiply(- n,P))),np.transpose((np.multiply(m,P)))])
     y0 = np.linalg.solve(A,b)
     
-    # by starting at the linear solution, solve the non-linear problem
-    def f(y):
-        return F(y,P,n,T,m)
-    def fprime(y):
-        return J(y,P,n,T,m)
-    
-    y = fsolve(f,y0)
+    # by starting at the linear solution, solve the non-linear problem    
+    y = fsolve(F, y0, args=(P,n,T,m), fprime=J, **kwargs)
     z = y
     z[1] = y[1] / (1 - y[0])
     return z
@@ -124,10 +163,10 @@ def F(y, P, n, T, m):
 def J(y, P, n, T, m):
     # The Jacobian of the nonlinear equations -- can speed up root finding, but is not required
     lambda_, alpha, beta, N, M = F_params(y, P, n, T, m)
-    dfdlambdaprime = T - (np.multiply(N,(1 + np.multiply(alpha,P))))
-    dfdu = np.multiply(- N,P)
-    dfdbeta = np.multiply(M,P)
-    Jac = np.array([np.transpose(dfdlambdaprime),np.transpose(dfdu),np.transpose(dfdbeta)])
+    dfdlambdaprime = T - N*(1 + alpha*P)
+    dfdu = -N*P
+    dfdbeta = M*P
+    Jac = np.array([dfdlambdaprime,dfdu,dfdbeta]).T
     return Jac
 
 

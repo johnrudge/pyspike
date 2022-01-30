@@ -3,30 +3,28 @@ import numpy as np
 from scipy.optimize import fsolve 
 
 def dsinversion(isodata, measured, spike=None, isoinv=None, standard=None):
-#    DSINVERSION    Do the double spike inversion for a given set of measurements
-#    out=DSINVERSION(element,measured,spike,isoinv,standard)
-#             element -- element used in double spike, e.g. 'Fe'
-#             measured -- a matrix of beam intensities. Columns correspond to the
-#                 different isotopes e.g. for Fe, first column is 54Fe, second is 56Fe,
-#                 third is 57Fe, fourth is 58Fe. The matrix should have the same number
-#                 of columns as there are isotopes available.
-#             spike -- a composition vector for the spike. e.g. [0 0 0.5 0.5] is a 50-50
-#                 mix of 57Fe and 58Fe.
-#             isoinv -- the four isotopes to use in the inversion, e.g [54 56 57 58]. This
-#                 defaults to the first four isotopes.
-#             standard -- standard composition or unspiked run data. Defaults to the
-#                 value in ISODATA.(element).standard if not specified.
-# This routine performs the double spike inversion on measured data to return the
-# "true" composition of the sample. Output is returned as a structure with the
-# following fields
-#             alpha -- the inferred natural fractionations
-#             beta -- the inferred instrumental fractionations
-#             prop -- the inferred proportions of spike to sample
-#             sample -- the inferred compositions of the sample
-#             mixture -- the inferred compositions of the mixture
-#   Example
-#   out=dsinversion('Fe',measured,[0 0 0.5 0.5],[54 56 57 58]);
-#   plot(out.alpha);
+    """Do the double spike inversion for a given set of measurements
+            isodat -- object of class IsoData, e.g. IsoData('Fe')
+            measured -- a matrix of beam intensities. Columns correspond to the
+                different isotopes e.g. for Fe, first column is 54Fe, second is 56Fe,
+                third is 57Fe, fourth is 58Fe. The matrix should have the same number
+                of columns as there are isotopes available.
+            spike -- a composition vector for the spike. e.g. [0 0 0.5 0.5] is a 50-50
+                mix of 57Fe and 58Fe. If None this is read from isodata.
+            isoinv -- the four isotopes to use in the inversion, e.g [54 56 57 58]. If
+                None this is read from isodata.
+            standard -- standard composition or unspiked run data. If
+                None this is read from isodata.
+    This routine performs the double spike inversion on measured data to return the
+    "true" composition of the sample. Output is returned as a dictionary with the
+    following fields
+            alpha -- the inferred natural fractionations
+            beta -- the inferred instrumental fractionations
+            prop -- the inferred proportions of spike to sample
+            sample -- the inferred compositions of the sample
+            mixture -- the inferred compositions of the mixture
+    Example
+    dsinversion(IsoData('Fe'),measured,[0 0 0.5 0.5],[54 56 57 58])"""
 
     # Convert to numpy array if not already
     measured = np.array(measured)

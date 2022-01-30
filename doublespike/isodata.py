@@ -1,12 +1,23 @@
 import csv
 import numpy as np
+import pkg_resources
+import codecs
 
-def loadrawdata(filename = 'data/maininput.csv'):
+# Could be any dot-separated package/module name or a "Requirement"
+
+
+def loadrawdata(filename = None):
     # read in isotope system datafile and return a python dictionary with data
+    if filename is None:
+        resource_package = __name__
+        resource_path = '/'.join(('data', 'maininput.csv'))  # Do not use os.path.join()
+        filename = pkg_resources.resource_filename(resource_package, resource_path)
+    
+    f = open(filename, 'r')
+    csvreader = csv.reader(f)
+    
     data = {}
 
-    f = open(filename)
-    csvreader = csv.reader(f)
 
     next(csvreader) # ignore header row
     j = 0

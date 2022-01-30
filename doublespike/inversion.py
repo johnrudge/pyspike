@@ -1,4 +1,4 @@
-from isodata import IsoData
+from .isodata import IsoData
 import numpy as np
 from scipy.optimize import fsolve 
 
@@ -27,6 +27,9 @@ def dsinversion(isodata, measured, spike=None, isoinv=None, standard=None):
 #   Example
 #   out=dsinversion('Fe',measured,[0 0 0.5 0.5],[54 56 57 58]);
 #   plot(out.alpha);
+
+    # Convert to numpy array if not already
+    measured = np.array(measured)
 
     # Get data from isodata if not supplied as arguments
     if spike is None:
@@ -68,7 +71,7 @@ def dsinversion(isodata, measured, spike=None, isoinv=None, standard=None):
         isoinv = np.concatenate((np.array([deno]),nume))
 
     # Take ratios based on the isotopes we are inverting
-    P = np.log(ratio(idat.mass, isoinv))
+    P = np.log(ratio(isodata.mass, isoinv))
     n = ratio(standard, isoinv)
     T = ratio(spike, isoinv)
     m = ratio(measured,isoinv)
@@ -85,7 +88,7 @@ def dsinversion(isodata, measured, spike=None, isoinv=None, standard=None):
     isonum = isonum[isonum != isoinv[0]]
     isonum = np.concatenate((np.array([isoinv[0]]), isonum))
     
-    AP = np.log(ratio(idat.mass, isonum))
+    AP = np.log(ratio(isodata.mass, isonum))
     AT = ratio(spike, isonum)
     An = ratio(standard, isonum)
     Am = ratio(measured, isonum)
@@ -93,34 +96,40 @@ def dsinversion(isodata, measured, spike=None, isoinv=None, standard=None):
     # Calculate sample and mixture proportion, and proportion by mole
     AM = np.zeros_like(Am)
     AN = np.zeros_like(Am)
+    out['prop']=np.zeros_like(out['alpha'])
     for i in np.arange(nobs):
         AM[i,:] = Am[i,:]*np.exp(- AP * out['beta'][i])
-        AN[i,:] = Am[i,:]*np.exp(- AP * out['alpha'][i])
-        prop = ratioproptorealprop(np.array([lambda_[i],(1 - lambda_[i])]),np.array([AT[i,:],AN[i,:]]))
-        out.prop[i,0] = prop[0]
+        AN[i,:] = An[i,:]*np.exp(- AP * out['alpha'][i])
+        prop = ratioproptorealprop(lambda_[i], AT[i,:], AN[i,:])
+        out['prop'][i] = prop
+    
+    out['sample'] = np.zeros_like(measured)
+    out['mixture'] = np.zeros_like(measured)
+    out['sample'][:,isonum[0]] = 1
+    out['sample'][:,isonum[1:]] = AN
+    out['mixture'][:,isonum[0]] = 1
+    out['mixture'][:,isonum[1:]] = AM
+    out['sample'] = normalise_composition(out['sample'])
+    out['mixture'] = normalise_composition(out['mixture'])
+    
+    if nobs==1:
+        # For single measurements make the output more compact
+        out['alpha']=out['alpha'][0]
+        out['beta']=out['beta'][0]
+        out['prop']=out['prop'][0]
+        out['sample']=np.squeeze(out['sample'])
+        out['mixture']=np.squeeze(out['mixture'])
     
     return out
 
-def ratioproptorealprop(ratprop, ratios): 
-    # convert a proportion in ratio space to one per mole
-    nratios = ratios.shape[1]
-    nratprops = len(ratprop)
+def normalise_composition(comp):
+    return comp / comp.sum(axis=1)[:, np.newaxis]
 
-    invpropdenom = np.sum(np.vstack((np.ones(nratios),ratios)), axis = 0)
-    print(invpropdenom)
-    #newinvpropdenom = np.matlib.repmat(invpropdenom,np.array([nratprops,1]))
-    newinvpropdenom = np.tile(invpropdenom,(nratprops,1))
-    print(newinvpropdenom)                          
-                              
-    prop = ratprop*newinvpropdenom.T
-    print("prop1",prop)
-    sprop = np.sum(prop, 0)
-    print(sprop)
-    #sprop = np.matlib.repmat(sprop,np.array([1,nratios]))
-    sprop = np.tile(sprop,(nratios,1))
-    prop = prop / sprop
-    print("prop",prop)
-    return prop
+def ratioproptorealprop(lambda_, ratio_a, ratio_b): 
+    # convert a proportion in ratio space to one per mole
+    a = 1 + sum(ratio_a)
+    b = 1 + sum(ratio_b)
+    return lambda_*a / (lambda_*a+ (1-lambda_)*b)
 
 
 

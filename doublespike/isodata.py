@@ -1,10 +1,10 @@
 import csv
 import numpy as np
 import pkg_resources
-import codecs
 
-# Could be any dot-separated package/module name or a "Requirement"
-
+# Fundamental constants
+elementarycharge = 1.60217646e-19 # coulombs
+k = 1.3806504e-23  # m^2 kg s^-2 K^-1, Boltzmann constant
 
 def loadrawdata(filename = None):
     # read in isotope system datafile and return a python dictionary with data
@@ -17,7 +17,6 @@ def loadrawdata(filename = None):
     csvreader = csv.reader(f)
     
     data = {}
-
 
     next(csvreader) # ignore header row
     j = 0
@@ -67,6 +66,7 @@ class IsoData():
             self.standard = None
             self.rawspike = None
         self.spike = None
+        self.errormodel = {}
     
     def __repr__(self):
         return "IsoData()"
@@ -98,7 +98,7 @@ class IsoData():
         self.rawspike = np.array(rawspike)
     
     def isoindex(self, ix):
-        # give the data index corresponding to a given isotope number
+        """give the data index corresponding to a given isotope number"""
         if type(ix) == int:
             return np.where(self.isonum ==ix)[0][0]
         else:
@@ -106,20 +106,88 @@ class IsoData():
             return np.array([np.where(self.isonum ==i)[0][0] for i in ix])
         
     def isoname(self):
-        # names of the isotopes
+        """names of the isotopes"""
         return [self.element + str(i) for i in self.isonum]
     
     def isolabel(self):
-        # isotope labels for plotting
+        """isotope labels for plotting"""
         return ['^{' +  str(i) +'}' + self.element for i in self.isonum]
     
     def nisos(self):
-        # number of isotopes in system
+        """number of isotopes in system"""
         return len(self.isonum)
     
     def nratios(self):
-        # number of isotope ratios to describe system
+        """number of isotope ratios to describe system"""
         return self.nisos() - 1
+    
+    def set_errormodel(self, intensity = 10, deltat = 8, R = 1e11, T = 300, radiogenic = None, measured_type = 'fixed-total'): 
+        """Set the error model used for error estimates and monte carlo runs.
+        
+            Parameters:
+                    intensity: Total beam intensity in volts
+                    delta_t: Integration time in seconds
+                    R: resistance in Ohms
+                    T: temperature in K
+                    radiogenic: If True put errors on the standard (unspiked) run, if False do not.
+                                If None, then 'Pb','Sr','Hf','Os','Nd' are assumed radiogenic, others not.
+                    measured_type: If 'fixed-total' then total beam intensity of mixture is fixed,
+                                   if 'fixed-sample' then voltage for the sample is fixed"""
+        
+        if radiogenic is None:
+            if self.element in ['Pb','Sr','Hf','Os','Nd']:
+                radiogenic = True
+            else:
+                radiogenic = False
+        
+        a = 4 * k * T * R / deltat
+        b = elementarycharge * R / deltat
+        
+        nisos = self.nisos()
+        
+        # by default assume Johnson noise and counting statistics
+        self.errormodel['measured']={
+            'type': measured_type,
+            'intensity': intensity,
+            'a': a*np.ones(nisos),
+            'b': b*np.ones(nisos),
+            'c': 0.0*np.ones(nisos)
+            }
+        self.errormodel['spike']={
+            'type': 'fixed-total',
+            'intensity': intensity,
+            'a': 0.0*np.ones(nisos),
+            'b': 0.0*np.ones(nisos),
+            'c': 0.0*np.ones(nisos)
+            }
+        if radiogenic:
+            # if a radiogenic isotope then put errors on the standard (unspiked) run
+            self.errormodel['standard']={
+                'type': 'fixed-total',
+                'intensity': intensity,
+                'a': a*np.ones(nisos),
+                'b': b*np.ones(nisos),
+                'c': 0.0*np.ones(nisos)
+                }
+        else:
+            # otherwise assume no errors on standard composition
+            self.errormodel['standard']={
+                'type': 'fixed-total',
+                'intensity': intensity,
+                'a': 0.0*np.ones(nisos),
+                'b': 0.0*np.ones(nisos),
+                'c': 0.0*np.ones(nisos)
+                }
+
+    def set_custom_errormodel(self, errormodel):
+        """Set the error model used for error estimates and monte carlo runs.
+        
+            Parameters:
+                    errormodel: A dictionary giving the complete errormodel.
+                    
+            See IsoData.errormodel for format of dictionary."""
+        self.errormodel = errormodel
+
         
 if __name__=="__main__":
     idat = IsoData('Fe')

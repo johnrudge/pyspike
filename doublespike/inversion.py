@@ -4,14 +4,14 @@ from scipy.optimize import fsolve
 
 def dsinversion(isodata, measured, spike=None, isoinv=None, standard=None):
     """Do the double spike inversion for a given set of measurements
-            isodat -- object of class IsoData, e.g. IsoData('Fe')
+            isodata -- object of class IsoData, e.g. IsoData('Fe')
             measured -- a matrix of beam intensities. Columns correspond to the
                 different isotopes e.g. for Fe, first column is 54Fe, second is 56Fe,
                 third is 57Fe, fourth is 58Fe. The matrix should have the same number
                 of columns as there are isotopes available.
-            spike -- a composition vector for the spike. e.g. [0 0 0.5 0.5] is a 50-50
+            spike -- a composition vector for the spike. e.g. [0, 0, 0.5, 0.5] is a 50-50
                 mix of 57Fe and 58Fe. If None this is read from isodata.
-            isoinv -- the four isotopes to use in the inversion, e.g [54 56 57 58]. If
+            isoinv -- the four isotopes to use in the inversion, e.g [54, 56, 57, 58]. If
                 None this is read from isodata.
             standard -- standard composition or unspiked run data. If
                 None this is read from isodata.
@@ -24,10 +24,8 @@ def dsinversion(isodata, measured, spike=None, isoinv=None, standard=None):
             sample -- the inferred compositions of the sample
             mixture -- the inferred compositions of the mixture
     Example
-    dsinversion(IsoData('Fe'),measured,[0 0 0.5 0.5],[54 56 57 58])"""
+    dsinversion(IsoData('Fe'),measured,[0, 0, 0.5, 0.5],[54, 56, 57, 58])"""
 
-    # Convert to numpy array if not already
-    measured = np.array(measured)
 
     # Get data from isodata if not supplied as arguments
     if spike is None:
@@ -42,6 +40,11 @@ def dsinversion(isodata, measured, spike=None, isoinv=None, standard=None):
             isoinv = isodata.isonum[0:4]
     if standard is None:
         standard = isodata.standard
+
+    # Convert to numpy array if not already
+    measured = np.array(measured)
+    spike = np.array(spike)
+    standard = np.array(standard)
 
     # Duplicate so all matrices same size
     nspike, nstandard, nmeasured = 1, 1, 1
@@ -129,7 +132,11 @@ def ratioproptorealprop(lambda_, ratio_a, ratio_b):
     b = 1 + sum(ratio_b)
     return lambda_*a / (lambda_*a+ (1-lambda_)*b)
 
-
+def realproptoratioprop(prop, ratio_a, ratio_b): 
+    # convert a proportion per mole into ratio space
+    a = 1 + sum(ratio_a)
+    b = 1 + sum(ratio_b)
+    return prop*b / (prop*b+ (1-prop)*a)
 
 def dscorrection(P, n, T, m, **kwargs): 
     # Routine for double spike fractionation correction

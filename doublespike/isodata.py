@@ -116,7 +116,7 @@ class IsoData():
         return ['$^{' +  str(i) +'}$' + self.element for i in self.isonum]
     
     def rawspikelabel(self):
-        return ['spike ' + str(i+1) for i in range(self.rawspike.shape[1])]
+        return ['spike ' + str(i+1) for i in range(self.rawspike.shape[0])]
     
     def nisos(self):
         """number of isotopes in system"""
@@ -125,6 +125,10 @@ class IsoData():
     def nratios(self):
         """number of isotope ratios to describe system"""
         return self.nisos() - 1
+    
+    def nrawspikes(self):
+        """number of isotope ratios to describe system"""
+        return self.rawspike.shape[0]
     
     def set_errormodel(self, intensity = 10, deltat = 8, R = 1e11, T = 300, radiogenic = None, measured_type = 'fixed-total'): 
         """Set the error model used for error estimates and monte carlo runs.

@@ -100,6 +100,6 @@ if __name__=="__main__":
     from .isodata import IsoData
     idat = IsoData('Fe')
     idat.set_errormodel()
-    errorcurve2d(idat,'pure',[57,58], resolution = 100);
+    errorcurve2d(idat,'real',[2, 3], resolution = 100);
     plt.show()
     

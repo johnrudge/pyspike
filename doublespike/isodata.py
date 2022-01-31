@@ -99,11 +99,13 @@ class IsoData():
     
     def isoindex(self, ix):
         """give the data index corresponding to a given isotope number"""
-        if type(ix) == int:
-            return np.where(self.isonum ==ix)[0][0]
+        if ix is None:
+            return None
+        elif type(ix) == int:
+            return isonum_to_idx(self.isonum, ix)
         else:
             # assume an array or list
-            return np.array([np.where(self.isonum ==i)[0][0] for i in ix])
+            return np.array([isonum_to_idx(self.isonum, i) for i in ix])
         
     def isoname(self):
         """names of the isotopes"""
@@ -111,7 +113,10 @@ class IsoData():
     
     def isolabel(self):
         """isotope labels for plotting"""
-        return ['^{' +  str(i) +'}' + self.element for i in self.isonum]
+        return ['$^{' +  str(i) +'}$' + self.element for i in self.isonum]
+    
+    def rawspikelabel(self):
+        return ['spike ' + str(i+1) for i in range(self.rawspike.shape[1])]
     
     def nisos(self):
         """number of isotopes in system"""
@@ -188,6 +193,12 @@ class IsoData():
             See IsoData.errormodel for format of dictionary."""
         self.errormodel = errormodel
 
+def isonum_to_idx(isonum, i):
+    quest = np.where(isonum ==i)[0]
+    if len(quest)==0:
+        return i
+    else:
+        return quest[0]
         
 if __name__=="__main__":
     idat = IsoData('Fe')

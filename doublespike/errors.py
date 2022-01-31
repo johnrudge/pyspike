@@ -1,4 +1,6 @@
 import numpy as np
+import itertools
+from scipy.optimize import minimize, LinearConstraint
 
 from .inversion import realproptoratioprop, ratio
 
@@ -89,7 +91,7 @@ def errorestimate(isodata, prop = None, spike = None, isoinv = None, errorratio 
     Vz, VAN, _ = fcerrorpropagation(z,AP,An,AT,Am,VAn,VAT,VAm,srat)
 
     # Error to return
-    if errorratio.size==0:
+    if errorratio is None:
         error = np.sqrt(Vz[1,1])
     else:
         # Now change coordinates to get variance of ratio we're interested in
@@ -99,7 +101,7 @@ def errorestimate(isodata, prop = None, spike = None, isoinv = None, errorratio 
         erat = np.where(errorratio[0] == newAni)[0][0]
         error = np.sqrt(newVAN[erat,erat])
     
-    if errorratio.size==0:
+    if errorratio is None:
         ppmperamu = (1000000.0 * error) / np.mean(isodata.mass)
     else:
         stdratio = isodata.standard[errorratio[0]] / isodata.standard[errorratio[1]]
@@ -244,14 +246,178 @@ def fcerrorpropagation(z,AP,An,AT,Am,VAn,VAT,VAm,srat):
     return Vz, VAN, VAM
 
 
+def optimalspike(isodata,type_ = 'pure',isospike = None,isoinv = None,errorratio = [],alpha = 0.0,beta = 0.0): 
+    """OPTIMALSPIKE    Find the optimal double spike composition and double spike-sample mixture proportions
+    [optspike,optprop,opterr,optisoinv,optspikeprop,optppmperamu]
+    =OPTIMALSPIKE(element,type,isospike,isoinv,errorratio,alpha,beta)
+                element -- element used in double spike, e.g. 'Fe'
+                This is the only mandatory argument.
+                type -- type of spike, 'pure' or 'real'. Real spikes, such as those from
+                Oak Ridge National Labs, contain impurities (see 'data/maininput.csv'
+                or ISODATA.(element).rawspike) for their assumed compositions.
+                By default pure spikes are used.
+                isospike -- the isotopes used in the double spike e.g. [54 57].
+                By default all choices of 2 isotopes are tried.
+                isoinv -- the isotopes used in the inversion, e.g. [54 56 57 58].
+                By default all choices of 4 isotopes are tried.
+                errorratio -- by default, the optimal double spike is chosen as that which
+                minimises the error on the natural fractionation factor (known as
+                alpha). Instead, the optimiser can be told to minimise the
+                error on a particular ratio by setting errorratio. e.g.
+                setting errorratio=[58 56] will minimise the error on 58Fe/56Fe.
+                alpha, beta -- there is a small dependance of the error on the fractionation
+                factors (instrumental and natural, or alpha and beta). Values of alpha and
+                beta can be set here if desired, although the effect on the optimal spikes
+                is slight unless the fractionations are very large. Default is zero.
+        
+        All the outputs are provided as matrices. Each column represents an isotope
+    (see ISODATA.(element).isonum for the isotope numbers) e.g. for Fe the columns
+    correspond to the isotopes 54Fe, 56Fe, 57Fe, 58Fe. The rows represent the
+    different combinations of double spikes and isotopes being tried, in order of
+    error: The first row is the best double spike, and the last row is the worst.
+        optspike -- the proportions of each isotope in the optimal double spike.
+        optprop -- the optimal proportion of spike in the double spike-sample mix.
+        opterr -- the error in the fractionation factor (or ratio if specified)
+                for the optimal spike.
+        optisoinv -- the 4 isotopes used in the inversion.
+        optspikeprop -- the proportion of each raw spike in the optimal double spike.
+        optppmperamu -- an alternative expression of the error in terms of ppm per amu.
+        
+        Note that a number of parameters are specified in the global variable ISODATA.
+        
+        Example
+    [optspike,optprop,opterr]=optimalspike('Fe')"""
+    
+    # Convert isotope mass numbers to index numbers
+    errorratio = isodata.isoindex(errorratio)
+    if type_ == 'pure':
+        optspike,optprop,opterr,optisoinv,optspikeprop,optppmperamu = optimalpurespike(isodata,beta,alpha,errorratio,isospike,isoinv)
+    else:
+        optspike,optprop,opterr,optisoinv,optspikeprop,optppmperamu = optimalrealspike(isodata,beta,alpha,errorratio,isospike,isoinv)
+    
+    return optspike,optprop,opterr,optisoinv,optspikeprop,optppmperamu
+
+def optimalpurespike(isodata,beta = 0.0,alpha = 0.0,errorratio = None,isospike = None,isoinv = None): 
+    #OPTIMALPURESPIKE    Finds the best pure spike
+#    OPTIMALPURESPIKE(isodata,beta,alpha,errorratio,isospike,isoinv)
+#             isodata -- data about a particular element
+#             beta -- instrumental fractionation
+#             alpha -- natural fractionation
+#             errorratio -- the ratio whose error we are targeting
+#             isospike -- the isotopes to spike
+#             isoinv -- the isotopes used in the inversion
+
+    # Convert isotope mass numbers to index numbers
+    errorratio = isodata.isoindex(errorratio)
+    isospike = isodata.isoindex(isospike)
+    isoinv = isodata.isoindex(isoinv)
+    
+    # If don't specify inversion isotopes, do all possible combinations
+    if isoinv is None:
+        isoinv = list(itertools.combinations(np.arange(isodata.nisos()), 4))
+    else:
+        isoinv = list([isoinv])
+    
+    # Work out all combinations of inversion isotopes and spiking isotopes
+    isoinvvals = []
+    isospikevals = []
+    for i in range(len(isoinv)):
+        if isospike is None:
+            #isospikev = combnk(isoinv(i,:),2)
+            isospikev = list(itertools.combinations(isoinv[i], 2))
+        else:
+            if len(set(isospike).intersection(set(isoinv[i]))) == 2:
+                isospikev = list([isospike])
+            else:
+                isospikev = None
+        
+        if isospikev is not None:
+            isospikevals.append(isospikev)
+            isoinvvals.append(np.tile(isoinv[i],(len(isospikev),1)))
+    isoinvvals = np.vstack(isoinvvals)
+    isospikevals = np.vstack(isospikevals)
+   
+    optspikes = []
+    optprops = []
+    opterrs = []
+    optppmperamus = []
+    
+    for i in range(len(isoinvvals)):
+        optspike,optprop,opterr,optppmperamu = singlepureoptimalspike(isodata,beta,alpha,errorratio,isospikevals[i,:],isoinvvals[i,:])
+        optspikes.append(optspike)
+        optprops.append(optprop)
+        opterrs.append(opterr)
+        optppmperamus.append(optppmperamu)
+    
+    optspike = np.vstack(optspikes)
+    optprop = np.array(optprops)
+    opterr = np.array(opterrs)
+    optppmperamu = np.array(optppmperamus)
+    optisoinv = isoinvvals
+    
+    ## Sort in ascending order of error
+    ix = np.argsort(opterr)
+
+    optppmperamu = optppmperamu[ix]
+    optspike = optspike[ix,:]
+    optprop = optprop[ix]
+    optisoinv = optisoinv[ix,:]
+    optisoinv = isodata.isonum[optisoinv]
+    optspikeprop = optspike
+    
+    return optspike,optprop,opterr,optisoinv,optspikeprop,optppmperamu
+    
+def singlepureoptimalspike(isodata,beta = 0.0,alpha = 0.0,errorratio = None,isospike = None,isoinv = None): 
+    # Calculate the composition of the optimal double spike given the isotopes used in the inversion
+    # and of those the isotopes we are spiking
+    
+    spikevector1 = np.zeros(isodata.nisos())
+    spikevector1[isospike[0]] = 1.0
+    spikevector2 = np.zeros(isodata.nisos())
+    spikevector2[isospike[1]] = 1.0
+    
+    tol = 2e-05
+    lb = np.array([tol, tol])
+    ub = np.array([1-tol, 1-tol])
+    
+    con = LinearConstraint(np.eye(2), lb, ub)
+
+    y0 = np.array([0.5,0.5])
+    
+    # Helpful to rescale the error, to make everything roughly order 1 for the optimiser
+    initialerror, _ = errorestimate(isodata,y0[0],y0[1]*spikevector1 + (1 - y0[1])*spikevector2,isoinv,errorratio,beta,alpha)
+    
+    def objective(y):
+        error, ppmperamu = errorestimate(isodata,y[0],y[1]*spikevector1 + (1 - y[1])*spikevector2,isoinv,errorratio,beta,alpha)
+        #print("error", error)
+        return error/initialerror 
+    
+    res = minimize(objective, y0, tol = 1e-10, constraints = {con})
+    y = res.x
+    optprop = y[0]
+    optspike = y[1] * spikevector1 + (1 - y[1]) * spikevector2
+    opterr,optppmperamu = errorestimate(isodata,y[0],y[1]*spikevector1 + (1 - y[1])*spikevector2,isoinv,errorratio,beta,alpha)
+    
+    return optspike,optprop,opterr,optppmperamu
+    
+
 if __name__=="__main__":
     from .isodata import IsoData
-    isodata = IsoData('Fe')
+    isodata = IsoData('Zn')
+    
     
     #spike = np.array([[1e-9, 0.1, 0.4, 0.4],[1e-9, 0.1, 0.4, 0.4]])    
-    isodata.set_spike([0.0, 0.0, 0.5, 0.5])
+    #isodata.set_spike([0.0, 0.0, 0.5, 0.5])
     isodata.set_errormodel()
 
-    alpha_err, ppm_err = errorestimate(isodata, prop = 0.5, alpha = -0.2, beta = 1.8 )
-    print(alpha_err)
+    #alpha_err, ppm_err = errorestimate(isodata, prop = 0.5, alpha = -0.2, beta = 1.8 )
+    
+    optspike,optprop,opterr,optisoinv,optspikeprop,optppmperamu = optimalpurespike(isodata, isospike = None, isoinv = None)
+    
+    print(optspike)
+    print(optprop)
+    print(opterr)
+    print(optisoinv)
+    print(optspikeprop)
+    print(optppmperamu)
 

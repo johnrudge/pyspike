@@ -1,7 +1,7 @@
 import numpy as np
+import csv
 from .isodata import IsoData, default_data
 from .errors import optimalspike
-
 
 def cocktail(type_ = 'pure', filename = 'cookbook.csv', elements = None): 
     """COCKTAIL   Generate double spike cocktail lists
@@ -28,36 +28,54 @@ sorted in order of error.
         elements = list(default_data.keys())
     
     print('Writing to '+filename)
-    title = 'A double spike cocktail list: ',type_,' spikes'
-    #fwritecell(filename,'%s','w',np.array([title]))
-    #fwritecell(filename,'%s','a',np.array(['']))
+    f = open(filename, 'w')
+    writer = csv.writer(f)
+    
+    title = 'A double spike cocktail list: '+type_+' spikes'
+    writer.writerow([title])
+    writer.writerow([])
+    
     for element in elements:
         print(element)
         isodata = IsoData(element)
         isodata.set_errormodel()
-        if (type_=='pure') or (type_=='real' and isodat.nrawspikes() > 1):
+        if (type_=='pure') or (type_=='real' and isodata.nrawspikes() > 1):
             optspike,optprop,opterr,optisoinv,optspikeprop,optppmperamu = optimalspike(isodata,type_)
-            #optisoinv = isodata.isoindex(optisoinv)
-            #optisonams = [isodata.isoname[optisoinv[:,0]], isodata.isoname[optisoinv[:,1]], isodata.isoname[optisoinv[:,2]], isodata.isoname[optisoinv[:,3]] ]
-            print(optisoinv)
-            ## write output to file
-            #isohead = np.transpose(strcat(np.matlib.repmat(np.array(['iso']),4,1),num2str(np.transpose((np.arange(1,4+1))))))
-            #if type_=='pure':
-                #output = np.array([optisonams,num2cell(np.array([optspike,optprop(1 - optprop),opterr,optppmperamu]))])
-                #header = np.array([isohead,in_.isoname,np.array(['spike']),np.array(['sample']),np.array(['error']),np.array(['ppmperamu'])])
-                #fwritecell(filename,np.array([np.matlib.repmat('%s,',1,4),np.matlib.repmat('%s,',1,in_.nisos),'%s,%s,%s,%s']),'a',header)
-                #fwritecell(filename,np.array([np.matlib.repmat('%s,',1,4),np.matlib.repmat('%f,',1,in_.nisos),'%f,%f,%f,%f']),'a',output)
-                #fwritecell(filename,'%s','a',np.array(['']))
-            #else:
-                #spikehead = np.transpose(strcat(np.matlib.repmat(np.array(['spike']),in_.nspikes,1),num2str(np.transpose((np.arange(1,in_.nspikes+1))))))
-                #output = np.array([optisonams,num2cell(np.array([optspike,optspikeprop,optprop(1 - optprop),opterr,optppmperamu]))])
-                #header = np.array([isohead,in_.isoname,spikehead,np.array(['spike']),np.array(['sample']),np.array(['error']),np.array(['ppmperamu'])])
-                #fwritecell(filename,np.array([np.matlib.repmat('%s,',1,4),np.matlib.repmat('%s,',1,in_.nisos),np.matlib.repmat('%s,',1,in_.nspikes),'%s,%s,%s,%s']),'a',header)
-                #fwritecell(filename,np.array([np.matlib.repmat('%s,',1,4),np.matlib.repmat('%f,',1,in_.nisos),np.matlib.repmat('%f,',1,in_.nspikes),'%f,%f,%f,%f']),'a',output)
-                #fwritecell(filename,'%s','a',np.array(['']))
+            optisoinv = isodata.isoindex(optisoinv)
+            
+            isoname = isodata.isoname()
+            
+            def iname(i):
+                return isoname[i]
+            fv = np.vectorize(iname)
+            optisonams = fv(optisoinv)
+            
+            # write output to file
+            isohead = ['iso1','iso2','iso3','iso4']
+            
+            if type_=='pure':
+                header = isohead + isoname + ['spike','sample','error','ppmperamu']
+                writer.writerow(header)
+                
+                for i in range(len(opterr)):
+                    line = list(optisonams[i,:]) + list(optspike[i,:]) + list([optprop[i],1-optprop[i]])+list([opterr[i]])+list([optppmperamu[i]])
+                    writer.writerow(line)
+                writer.writerow([])
+
+            else:
+                spikename = ['spike' + str(i+1) for i in range(isodata.rawspike.shape[0])]
+                
+                header = isohead + isoname + spikename + ['spike','sample','error','ppmperamu']
+                writer.writerow(header)
+                
+                for i in range(len(opterr)):
+                    line = list(optisonams[i,:]) + list(optspike[i,:]) + list(optspikeprop[i,:]) + list([optprop[i],1-optprop[i]])+list([opterr[i]])+list([optppmperamu[i]])
+                    writer.writerow(line)
+                writer.writerow([])
     
+    f.close()
     print('Output written to '+filename)
     
     
 if __name__=="__main__":
-    cocktail('pure', filename='cocktail_pure.csv', elements=['Fe'])
+    cocktail('real', filename='cocktail_real.csv', elements=['Fe','Ca'])

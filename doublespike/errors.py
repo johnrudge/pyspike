@@ -1,10 +1,11 @@
 import numpy as np
 import itertools
 from scipy.optimize import minimize, LinearConstraint
+from scipy.special import expit, logit
 
 from .inversion import realproptoratioprop, ratio
 
-def errorestimate(isodata, prop = None, spike = None, isoinv = None, errorratio = [], alpha = 0.0, beta = 0.0): 
+def errorestimate(isodata, prop = None, spike = None, isoinv = None, errorratio = None, alpha = 0.0, beta = 0.0): 
     """ Calculates the error in the natural fractionation factor or a chosen ratio by linear error propagation
 
             isodata -- object of class IsoData, e.g. IsoData('Fe')
@@ -357,7 +358,7 @@ def optimalpurespike(isodata,beta = 0.0,alpha = 0.0,errorratio = None,isospike =
     
     ## Sort in ascending order of error
     ix = np.argsort(opterr)
-
+    opterr = opterr[ix]
     optppmperamu = optppmperamu[ix]
     optspike = optspike[ix,:]
     optprop = optprop[ix]
@@ -376,27 +377,26 @@ def singlepureoptimalspike(isodata,beta = 0.0,alpha = 0.0,errorratio = None,isos
     spikevector2 = np.zeros(isodata.nisos())
     spikevector2[isospike[1]] = 1.0
     
-    tol = 2e-05
-    lb = np.array([tol, tol])
-    ub = np.array([1-tol, 1-tol])
-    
-    con = LinearConstraint(np.eye(2), lb, ub)
-
-    y0 = np.array([0.5,0.5])
-    
     # Helpful to rescale the error, to make everything roughly order 1 for the optimiser
-    initialerror, _ = errorestimate(isodata,y0[0],y0[1]*spikevector1 + (1 - y0[1])*spikevector2,isoinv,errorratio,beta,alpha)
+    initialerror, _ = errorestimate(isodata,0.5,0.5*spikevector1 + (1 - 0.5)*spikevector2,isoinv,errorratio,beta,alpha)
     
     def objective(y):
-        error, ppmperamu = errorestimate(isodata,y[0],y[1]*spikevector1 + (1 - y[1])*spikevector2,isoinv,errorratio,beta,alpha)
-        #print("error", error)
+        p = expit(y[0])  # use expit transformation to keep things in range
+        q = expit(y[1])
+        
+        error, ppmperamu = errorestimate(isodata,p,q*spikevector1 + (1 - q)*spikevector2,isoinv,errorratio,beta,alpha)
         return error/initialerror 
     
-    res = minimize(objective, y0, tol = 1e-10, constraints = {con})
+    y0 = np.array([0.0, 0.0])
+    res = minimize(objective, y0, tol = 1e-10)
+    
     y = res.x
-    optprop = y[0]
-    optspike = y[1] * spikevector1 + (1 - y[1]) * spikevector2
-    opterr,optppmperamu = errorestimate(isodata,y[0],y[1]*spikevector1 + (1 - y[1])*spikevector2,isoinv,errorratio,beta,alpha)
+    p = expit(y[0])
+    q = expit(y[1])
+    
+    optprop = p
+    optspike = q * spikevector1 + (1 - q) * spikevector2
+    opterr,optppmperamu = errorestimate(isodata,p,q*spikevector1 + (1 - q)*spikevector2,isoinv,errorratio,beta,alpha)
     
     return optspike,optprop,opterr,optppmperamu
 
@@ -464,7 +464,7 @@ def optimalrealspike(isodata,beta = 0.0,alpha = 0.0,errorratio = None,isospike =
     
     ## Sort in ascending order of error
     ix = np.argsort(opterr)
-
+    opterr = opterr[ix]
     optppmperamu = optppmperamu[ix]
     optspike = optspike[ix,:]
     optprop = optprop[ix]
@@ -482,39 +482,46 @@ def singlerealoptimalspike(isodata,beta = 0.0,alpha = 0.0,errorratio = None,isos
     spikevector1 = isodata.rawspike[isospike[0], :]
     spikevector2 = isodata.rawspike[isospike[1], :]
     
-    tol = 2e-05
-    lb = np.array([tol, tol])
-    ub = np.array([1-tol, 1-tol])
+    # Helpful to rescale the error, to make everything roughly order 1 for the optimiser
+    initialerror, _ = errorestimate(isodata,0.5,0.5*spikevector1 + (1 - 0.5)*spikevector2,isoinv,errorratio,beta,alpha)
+    
+    tol = 1e-05
+    lb = np.array([logit(tol), logit(tol)])
+    ub = np.array([1-logit(tol), 1-logit(tol)])
     
     con = LinearConstraint(np.eye(2), lb, ub)
-
-    y0 = np.array([0.5,0.5])
-    
-    # Helpful to rescale the error, to make everything roughly order 1 for the optimiser
-    initialerror, _ = errorestimate(isodata,y0[0],y0[1]*spikevector1 + (1 - y0[1])*spikevector2,isoinv,errorratio,beta,alpha)
     
     def objective(y):
-        error, ppmperamu = errorestimate(isodata,y[0],y[1]*spikevector1 + (1 - y[1])*spikevector2,isoinv,errorratio,beta,alpha)
-        #print("error", error)
+        p = expit(y[0])  # use expit transformation to keep things in range
+        q = expit(y[1])
+        
+        error, ppmperamu = errorestimate(isodata,p,q*spikevector1 + (1.0 - q)*spikevector2,isoinv,errorratio,beta,alpha)
         return error/initialerror 
     
-    res = minimize(objective, y0, tol = 1e-10, constraints = {con})
+    y0 = np.array([0.0, 0.0])
+    #res = minimize(objective, y0, tol = 1e-16, constraints = {con})
+    res = minimize(objective, y0, tol = 1e-9)
+    
     y = res.x
-    optprop = y[0]
-    optspike = y[1] * spikevector1 + (1 - y[1]) * spikevector2
-    opterr,optppmperamu = errorestimate(isodata,y[0],y[1]*spikevector1 + (1 - y[1])*spikevector2,isoinv,errorratio,beta,alpha)
+    p = expit(y[0])
+    q = expit(y[1])
+    
+    optprop = p
+    optspike = q * spikevector1 + (1 - q) * spikevector2
+    opterr,optppmperamu = errorestimate(isodata,p,q*spikevector1 + (1 - q)*spikevector2,isoinv,errorratio,beta,alpha)
     
     optspikeprop=np.zeros(isodata.nrawspikes())
-    optspikeprop[isospike[0]]=y[1]
-    optspikeprop[isospike[1]]=1-y[1]
+    optspikeprop[isospike[0]]=q
+    optspikeprop[isospike[1]]=1-q
     
     return optspike,optprop,opterr,optspikeprop,optppmperamu
 
 
 if __name__=="__main__":
     from .isodata import IsoData
-    isodata = IsoData('Fe')
-    
+    #isodata = IsoData('Fe')
+    isodata = IsoData('Ca')
+    isoinv=[40, 44, 46, 48]
     
     #spike = np.array([[1e-9, 0.1, 0.4, 0.4],[1e-9, 0.1, 0.4, 0.4]])    
     #isodata.set_spike([0.0, 0.0, 0.5, 0.5])
@@ -522,7 +529,7 @@ if __name__=="__main__":
 
     #alpha_err, ppm_err = errorestimate(isodata, prop = 0.5, alpha = -0.2, beta = 1.8 )
     
-    optspike,optprop,opterr,optisoinv,optspikeprop,optppmperamu = optimalrealspike(isodata, isospike = None, isoinv = None)
+    optspike,optprop,opterr,optisoinv,optspikeprop,optppmperamu = optimalrealspike(isodata, isospike = [0,3], isoinv = isoinv)
     
     #optspike,optprop,opterr,optspikeprop,optppmperamu = singlerealoptimalspike(isodata, isospike = np.array([0, 1, 2, 3]))
     

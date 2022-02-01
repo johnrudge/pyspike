@@ -1,4 +1,4 @@
-"""Routines for performing the double spike inversion"""
+"""Routines for performing the double spike inversion."""
 
 from .isodata import IsoData
 import numpy as np
@@ -31,8 +31,8 @@ def dsinversion(isodata, measured, spike=None, isoinv=None, standard=None):
             mixture: the inferred compositions of the mixture
             
     Example:
-        >>> dsinversion(IsoData('Fe'),measured,[0, 0, 0.5, 0.5],[54, 56, 57, 58])"""
-
+        >>> dsinversion(IsoData('Fe'),measured,[0, 0, 0.5, 0.5],[54, 56, 57, 58])
+    """
     # Get data from isodata if not supplied as arguments
     if spike is None:
         if isodata.spike is None:
@@ -131,6 +131,7 @@ def dsinversion(isodata, measured, spike=None, isoinv=None, standard=None):
     return out
 
 def normalise_composition(comp):
+    """Normalise rows of array to unit sum, i.e. rows are compositional vectors."""
     return comp / comp.sum(axis=1)[:, np.newaxis]
 
 def ratioproptorealprop(lambda_, ratio_a, ratio_b): 
@@ -140,7 +141,7 @@ def ratioproptorealprop(lambda_, ratio_a, ratio_b):
     return lambda_*a / (lambda_*a+ (1-lambda_)*b)
 
 def realproptoratioprop(prop, ratio_a, ratio_b): 
-    """convert a proportion per mole into ratio space."""
+    """Convert a proportion per mole into ratio space."""
     a = 1 + sum(ratio_a)
     b = 1 + sum(ratio_b)
     return prop*b / (prop*b+ (1-prop)*a)
@@ -156,8 +157,8 @@ def dscorrection(P, n, T, m, **kwargs):
           
     Returns:
         Spike ratio proportion (lambda), natural fractionation (alpha),
-        and instrumental fractionation (beta) as a vector z=(lambda, (1-lambda)*alpha, beta)"""
-
+        and instrumental fractionation (beta) as a vector z=(lambda, (1-lambda)*alpha, beta)
+    """
     # start by solving the linear problem
     b = np.transpose((m - n))
     A = np.array([np.transpose((T - n)),np.transpose((np.multiply(- n,P))),np.transpose((np.multiply(m,P)))])
@@ -170,7 +171,7 @@ def dscorrection(P, n, T, m, **kwargs):
     return z
 
 def F_params(y, P, n, T, m):
-    """Main variables in the objective function."""
+    """Determine main variables in the objective function."""
     lambda_ = y[0]
     alpha = y[1] / (1 - lambda_)
     beta = y[2]
@@ -185,7 +186,7 @@ def F(y, P, n, T, m):
     return fval
 
 def J(y, P, n, T, m):
-    """The Jacobian of the nonlinear equations -- can speed up root finding, but is not required"""
+    """The Jacobian of the nonlinear equations -- can speed up root finding, but is not required."""
     lambda_, alpha, beta, N, M = F_params(y, P, n, T, m)
     dfdlambdaprime = T - N*(1 + alpha*P)
     dfdu = -N*P

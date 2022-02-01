@@ -1,3 +1,5 @@
+"""Module for computing cocktail lists of optimal spikes."""
+
 import numpy as np
 import csv
 from .isodata import IsoData, default_data
@@ -21,8 +23,8 @@ def cocktail(type_ = 'pure', filename = 'cookbook.csv', isodatas = None):
     Example:
         >>> cocktail('real')
         
-    See also optimalspike"""
-    
+    See also optimalspike
+    """
     if isodatas is None:
         elements = list(default_data.keys())
         isodatas = [IsoData(el) for el in elements]

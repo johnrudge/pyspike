@@ -44,8 +44,8 @@ def optimalspike(isodata,type_ = 'pure',isospike = None,isoinv = None,errorratio
 
     Example:
         >>> isodata_fe = IsoData('Fe')
-        >>> optspike,optprop,opterr,optisoinv,optspikeprop,optppmperamu = optimalspike(isodata_fe,'pure')"""
-    
+        >>> optspike,optprop,opterr,optisoinv,optspikeprop,optppmperamu = optimalspike(isodata_fe,'pure')
+    """
     # Convert isotope mass numbers to index numbers
     errorratio = isodata.isoindex(errorratio)
     if type_ == 'pure':
@@ -56,8 +56,7 @@ def optimalspike(isodata,type_ = 'pure',isospike = None,isoinv = None,errorratio
     return optspike,optprop,opterr,optisoinv,optspikeprop,optppmperamu
 
 def optimalpurespike(isodata,beta = 0.0,alpha = 0.0,errorratio = None,isospike = None,isoinv = None): 
-    """Finds the best pure spike"""
-
+    """Find the best pure spike."""
     # Convert isotope mass numbers to index numbers
     errorratio = isodata.isoindex(errorratio)
     isospike = isodata.isoindex(isospike)
@@ -119,9 +118,7 @@ def optimalpurespike(isodata,beta = 0.0,alpha = 0.0,errorratio = None,isospike =
     return optspike,optprop,opterr,optisoinv,optspikeprop,optppmperamu
     
 def singlepureoptimalspike(isodata,beta = 0.0,alpha = 0.0,errorratio = None,isospike = None,isoinv = None): 
-    # Calculate the composition of the optimal double spike given the isotopes used in the inversion
-    # and of those the isotopes we are spiking
-    
+    """Calculate the composition of the optimal double spike given the isotopes used in the inversion and of those the isotopes we are spiking."""
     spikevector1 = np.zeros(isodata.nisos())
     spikevector1[isospike[0]] = 1.0
     spikevector2 = np.zeros(isodata.nisos())
@@ -151,10 +148,8 @@ def singlepureoptimalspike(isodata,beta = 0.0,alpha = 0.0,errorratio = None,isos
     
     return optspike,optprop,opterr,optppmperamu
 
-
 def optimalrealspike(isodata,beta = 0.0,alpha = 0.0,errorratio = None,isospike = None,isoinv = None): 
-    """Finds the best real spike"""
-
+    """Find the best real spike."""
     # Convert isotope mass numbers to index numbers
     errorratio = isodata.isoindex(errorratio)
     isospike = isodata.isoindex(isospike)
@@ -221,7 +216,6 @@ def optimalrealspike(isodata,beta = 0.0,alpha = 0.0,errorratio = None,isospike =
 # A lot of copy-paste here --- need to clean-up
 def singlerealoptimalspike(isodata,beta = 0.0,alpha = 0.0,errorratio = None,isospike = None,isoinv = None): 
     """Calculate the composition of the optimal double spike given the isotopes used in the inversion and of those the isotopes we are spiking."""
-    
     spikevector1 = isodata.rawspike[isospike[0], :]
     spikevector2 = isodata.rawspike[isospike[1], :]
     

@@ -4,7 +4,7 @@ import numpy as np
 from .inversion import realproptoratioprop, ratio
 
 def errorestimate(isodata, prop = None, spike = None, isoinv = None, errorratio = None, alpha = 0.0, beta = 0.0): 
-    """ Calculates the error in the natural fractionation factor or a chosen ratio by linear error propagation.
+    """Calculate the error in the natural fractionation factor or a chosen ratio by linear error propagation.
 
     Args:
         isodata: object of class IsoData, e.g. IsoData('Fe')
@@ -23,15 +23,15 @@ def errorestimate(isodata, prop = None, spike = None, isoinv = None, errorratio 
             is slight unless the fractionations are very large.
             
         If spike or isoinv are set as None, values from isodata will be used instead.
-    
+        
     Returns:
         error (float): the error on the fractionation factor, or the specified ratio.
         ppmperamu (float): the error converted to an approximate ppm per atomic mass unit
         
     Example:
         >>> isodata_fe = IsoData('Fe')
-        >>> error, ppmperamu = errorestimate(isodata_fe,0.5,[0,0.5,0,0.5])"""
-
+        >>> error, ppmperamu = errorestimate(isodata_fe,0.5,[0,0.5,0,0.5])
+    """
     # Get data from isodata if not supplied as arguments
     if spike is None:
         if isodata.spike is None:
@@ -136,12 +136,12 @@ def calcratiocov(composition = None, errormodel = None, di = None, isonorm = Non
     return V
     
 def calcbeamcov(meanbeams = None,errormodel = None): 
-    """The beam covariance matrix."""
+    """Calculate beam covariance matrix."""
     beamvar = errormodel['a'] + errormodel['b']*meanbeams + errormodel['c']*(meanbeams ** 2)
     return np.diag(beamvar)
     
 def covbeamtoratio(meanbeams = None,covbeams = None,di = None): 
-    """Converts a covariance matrix for beams to one for ratios."""
+    """Convert a covariance matrix for beams to one for ratios."""
     # di is the isotope to denominator with
     # assumes last row and column of M correspond to denominator
     isonums = np.arange(len(meanbeams))
@@ -181,8 +181,7 @@ def changedenomcov(data = None, datacov = None, olddi = None, newdi = None):
 
 
 def fcerrorpropagation(z,AP,An,AT,Am,VAn,VAT,VAm,srat): 
-    """Linear error propagation for the fractionation correction"""
-    
+    """Linear error propagation for the fractionation correction."""
     lambda_ = z[0]
     alpha = z[1]
     beta = z[2]

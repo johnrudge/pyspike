@@ -181,8 +181,8 @@ class IsoData():
             radiogenic (str): If True put errors on the standard (unspiked) run, if False do not.
                         If None, then 'Pb','Sr','Hf','Os','Nd' are assumed radiogenic, others not.
             measured_type (str): If 'fixed-total' then total beam intensity of mixture is fixed,
-                           if 'fixed-sample' then voltage for the sample is fixed."""
-        
+                           if 'fixed-sample' then voltage for the sample is fixed.
+        """
         if radiogenic is None:
             if self.element in ['Pb','Sr','Hf','Os','Nd']:
                 radiogenic = True
@@ -231,10 +231,11 @@ class IsoData():
     def set_custom_errormodel(self, errormodel):
         """Set the error model used for error estimates and monte carlo runs.
         
-            Args:
-                    errormodel: A dictionary giving the complete errormodel.
+        Args:
+            errormodel: A dictionary giving the complete errormodel.
                     
-            See IsoData.errormodel for format of dictionary."""
+        See IsoData.errormodel for format of dictionary.
+        """
         self.errormodel = errormodel
         
 if __name__=="__main__":

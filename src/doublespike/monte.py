@@ -1,4 +1,4 @@
-"""Routines for Monte Carlo mass spec simulation"""
+"""Routines for Monte Carlo mass spec simulation."""
 import numpy as np
 from numpy.random import default_rng
 from .isodata import IsoData
@@ -21,8 +21,8 @@ def monterun(isodata, prop = None, spike = None, alpha = 0.0, beta = 0.0, n = 10
     
     Example:
         >>> isodata = IsoData('Fe')
-        >>> measured=monterun(isodata,0.5,[0, 0, 0.5, 0.5])"""
-   
+        >>> measured=monterun(isodata,0.5,[0, 0, 0.5, 0.5])
+    """
     # Get spike from isodata if not supplied as argument
     if spike is None:
         if isodata.spike is None:
@@ -99,7 +99,7 @@ def monterun(isodata, prop = None, spike = None, alpha = 0.0, beta = 0.0, n = 10
 
     
 def normalise_composition(comp):
-    """Normalise an array so rows have unit sum, i.e. rows are compositional vectors"""
+    """Normalise an array so rows have unit sum, i.e. rows are compositional vectors."""
     return comp / comp.sum(axis=1)[:, np.newaxis]    
     
 if __name__=="__main__":

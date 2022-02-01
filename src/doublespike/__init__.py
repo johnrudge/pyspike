@@ -12,10 +12,9 @@ https://dx.doi.org/10.1016/j.chemgeo.2009.05.010
 and at:
 
 https://johnrudge.com/doublespike
-
 """
 
-__version__ = '0.1.0'
+__version__ = '0.1.3'
 __author__ = 'John F. Rudge'
 
 from .isodata import IsoData

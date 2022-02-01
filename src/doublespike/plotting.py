@@ -1,11 +1,11 @@
-"""Plotting routines using matplotlib"""
+"""Plotting routines using matplotlib."""
 import numpy as np
 import matplotlib.pyplot as plt
 from .errors import errorestimate
 from .optimal import optimalspike
     
 def errorcurve2d(isodata, type_ = 'pure', isospike = None, isoinv = None, errorratio = None, alpha = 0.0, beta = 0.0, resolution = 100,threshold = 0.25,ncontour = 25,plottype = 'default', **kwargs): 
-    """A 2D contour plot of error as a function of double spike composition and double spike-sample proportions
+    """2D contour plot of error as a function of double spike composition and double spike-sample proportions.
     
     Args:
         isodata: object of class IsoData, e.g. IsoData('Fe')
@@ -34,8 +34,8 @@ def errorcurve2d(isodata, type_ = 'pure', isospike = None, isoinv = None, errorr
         >>> isodata_fe = IsoData('Fe')
         >>> errorcurve2d(isodata_fe,'pure',[57, 58])
         
-    See also errorestimate"""
-        
+    See also errorestimate
+    """
     # Get data from isodata if not supplied as arguments
     if isoinv is None:
         if hasattr(isodata, 'isoinv'):
@@ -102,7 +102,7 @@ def errorcurve2d(isodata, type_ = 'pure', isospike = None, isoinv = None, errorr
     plt.plot(optprop[0],optspikeprop[0,isospike[0]],'rx')
 
 def errorcurve(isodata,spike = None,isoinv = None,errorratio = None,alpha = 0.0,beta = 0.0,plottype = 'default',**kwargs): 
-    """A plot of error as a function of double spike-sample proportions for a given double spike composition
+    """Plot of error as a function of double spike-sample proportions for a given double spike composition.
     
     Args:
         isodata: object of class IsoData, e.g. IsoData('Fe')
@@ -126,8 +126,8 @@ def errorcurve(isodata,spike = None,isoinv = None,errorratio = None,alpha = 0.0,
         >>> isodata_fe = IsoData('Fe')
         >>> errorcurve(isodata_fe,[0, 0, 0.5, 0.5])
     
-    See also errorestimate, errorcurve2"""
-    
+    See also errorestimate, errorcurve2
+    """
     # Get data from isodata if not supplied as arguments
     if isoinv is None:
         if hasattr(isodata, 'isoinv'):
@@ -165,7 +165,7 @@ def errorcurve(isodata,spike = None,isoinv = None,errorratio = None,alpha = 0.0,
 
 
 def errorcurve2(isodata,type_ = 'pure',prop = 0.5,isospike = None, isoinv = None,errorratio = None,alpha = 0.0,beta = 0.0,plottype = 'default',**kwargs): 
-    """A plot of error as a function of double spike proportions for a given double spike-sample proportion.
+    """Plot of error as a function of double spike proportions for a given double spike-sample proportion.
     
     Args:
         isodata: object of class IsoData, e.g. IsoData('Fe')
@@ -191,8 +191,8 @@ def errorcurve2(isodata,type_ = 'pure',prop = 0.5,isospike = None, isoinv = None
         >>> isodata_fe = IsoData('Fe')
         >>> errorcurve2(isodata_fe,'real',0.5,[54,57])
     
-    See also errorestimate, errorcurve"""
-    
+    See also errorestimate, errorcurve
+    """
     # Get data from isodata if not supplied as arguments
     if isoinv is None:
         if hasattr(isodata, 'isoinv'):
@@ -242,7 +242,7 @@ def errorcurve2(isodata,type_ = 'pure',prop = 0.5,isospike = None, isoinv = None
 
 
 def errorcurveoptimalspike(isodata,type_ = 'pure',isospike = None,isoinv = None,errorratio = None,alpha = 0.0,beta = 0.0,plottype = 'default',**kwargs): 
-    """Find the optimal double spike compositions and plot the corresponding error curves
+    """Find the optimal double spike compositions and plot the corresponding error curves.
     
     Args:
         isodata: object of class IsoData, e.g. IsoData('Fe')
@@ -269,8 +269,8 @@ def errorcurveoptimalspike(isodata,type_ = 'pure',isospike = None,isoinv = None,
     Example:
         >>> errorcurveoptimalspike(IsoData('Fe'))
     
-    See also optimalspike, errorcurve"""
-    
+    See also optimalspike, errorcurve
+    """
     if isoinv is None:
         if hasattr(isodata, 'isoinv'):
             isoinv = isodata.isoinv

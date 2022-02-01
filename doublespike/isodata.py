@@ -1,3 +1,4 @@
+"""Module which handles the data on isotope systems."""
 import csv
 import numpy as np
 import pkg_resources
@@ -7,7 +8,7 @@ elementarycharge = 1.60217646e-19 # coulombs
 k = 1.3806504e-23  # m^2 kg s^-2 K^-1, Boltzmann constant
 
 def loadrawdata(filename = None):
-    # read in isotope system datafile and return a python dictionary with data
+    """Read in isotope system datafile and return a python dictionary with data."""
     if filename is None:
         resource_package = __name__
         resource_path = '/'.join(('data', 'maininput.csv'))  # Do not use os.path.join()
@@ -46,12 +47,31 @@ def loadrawdata(filename = None):
         rs = np.array(data[el]['rawspike'])
         rs = rs/rs.sum(axis=0)
         data[el]['rawspike'] = rs.T
+    
+    f.close()
     return data
 
 default_data = loadrawdata()
 
 class IsoData():
+    """Object which stores data on an isotope system.
+    
+    Args:
+        element (str): the element string (e.g. 'Fe')
+    
+    Attributes:
+        element (str): the element e.g. 'Fe'
+        isonum (array): the isotopes of this element e.g. [54, 56, 57, 58]
+        mass (array): the atomic masses
+        standard (array): composition of a standard as a vector
+        spike (array): composition of a double spike used
+        isoinv (array): the 4 isotopes to use the inversion
+        rawspike (array): composition of single spikes available
+        errormodel (dict): dictionary describing the errormodel
+    """
+    
     def __init__(self, element):
+        """Given an element, initialise with some sensible default values.""" 
         if element in default_data.keys():
             default = default_data[element]
             self.element = default['element']
@@ -66,7 +86,12 @@ class IsoData():
             self.standard = None
             self.rawspike = None
         self.spike = None
+        if self.nisos() == 4:
+            self.isoinv = self.isonum
+        else:
+            self.isoinv = None
         self.errormodel = {}
+        self.set_errormodel()
     
     def __repr__(self):
         return "IsoData()"
@@ -87,6 +112,9 @@ class IsoData():
     
     def set_isonum(self, isonum):
         self.isonum = np.array(isonum, dtype=int)
+        
+    def set_isoinv(self, isoinv):
+        self.isonum = np.array(isoinv, dtype=int)
     
     def set_standard(self, standard):
         self.standard = np.array(standard)
@@ -98,7 +126,7 @@ class IsoData():
         self.rawspike = np.array(rawspike)
     
     def isoindex(self, ix):
-        """give the data index corresponding to a given isotope number"""
+        """Give the data index corresponding to a given isotope number e.g. 56->1."""
         
         def isonum_to_idx(k):
             quest = np.where(self.isonum ==k)[0]
@@ -119,40 +147,41 @@ class IsoData():
             return f(ix)
     
     def isoname(self):
-        """names of the isotopes"""
+        """Names of the isotopes."""
         return [self.element + str(i) for i in self.isonum]
     
     def isolabel(self):
-        """isotope labels for plotting"""
+        """Isotope labels for plotting."""
         return ['$^{' +  str(i) +'}$' + self.element for i in self.isonum]
     
     def rawspikelabel(self):
+        """Single spike labels for plotting."""
         return ['spike ' + str(i+1) for i in range(self.rawspike.shape[0])]
     
     def nisos(self):
-        """number of isotopes in system"""
+        """Number of isotopes in system."""
         return len(self.isonum)
     
     def nratios(self):
-        """number of isotope ratios to describe system"""
+        """Number of isotope ratios to describe system."""
         return self.nisos() - 1
     
     def nrawspikes(self):
-        """number of isotope ratios to describe system"""
+        """Number of single spikes available."""
         return self.rawspike.shape[0]
     
-    def set_errormodel(self, intensity = 10, deltat = 8, R = 1e11, T = 300, radiogenic = None, measured_type = 'fixed-total'): 
+    def set_errormodel(self, intensity = 10.0, deltat = 8.0, R = 1e11, T = 300.0, radiogenic = None, measured_type = 'fixed-total'): 
         """Set the error model used for error estimates and monte carlo runs.
         
-            Parameters:
-                    intensity: Total beam intensity in volts
-                    delta_t: Integration time in seconds
-                    R: resistance in Ohms
-                    T: temperature in K
-                    radiogenic: If True put errors on the standard (unspiked) run, if False do not.
-                                If None, then 'Pb','Sr','Hf','Os','Nd' are assumed radiogenic, others not.
-                    measured_type: If 'fixed-total' then total beam intensity of mixture is fixed,
-                                   if 'fixed-sample' then voltage for the sample is fixed"""
+        Args:
+            intensity (float): Total beam intensity in volts
+            delta_t (float): Integration time in seconds
+            R (float): resistance in Ohms
+            T (float): temperature in K
+            radiogenic (str): If True put errors on the standard (unspiked) run, if False do not.
+                        If None, then 'Pb','Sr','Hf','Os','Nd' are assumed radiogenic, others not.
+            measured_type (str): If 'fixed-total' then total beam intensity of mixture is fixed,
+                           if 'fixed-sample' then voltage for the sample is fixed."""
         
         if radiogenic is None:
             if self.element in ['Pb','Sr','Hf','Os','Nd']:
@@ -202,13 +231,11 @@ class IsoData():
     def set_custom_errormodel(self, errormodel):
         """Set the error model used for error estimates and monte carlo runs.
         
-            Parameters:
+            Args:
                     errormodel: A dictionary giving the complete errormodel.
                     
             See IsoData.errormodel for format of dictionary."""
         self.errormodel = errormodel
-
-
         
 if __name__=="__main__":
     idat = IsoData('Fe')

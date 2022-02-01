@@ -1,43 +1,49 @@
+"""Routines for performing the double spike inversion"""
+
 from .isodata import IsoData
 import numpy as np
 from scipy.optimize import fsolve 
 
 def dsinversion(isodata, measured, spike=None, isoinv=None, standard=None):
-    """Do the double spike inversion for a given set of measurements
-            isodata -- object of class IsoData, e.g. IsoData('Fe')
-            measured -- a matrix of beam intensities. Columns correspond to the
-                different isotopes e.g. for Fe, first column is 54Fe, second is 56Fe,
-                third is 57Fe, fourth is 58Fe. The matrix should have the same number
-                of columns as there are isotopes available.
-            spike -- a composition vector for the spike. e.g. [0, 0, 0.5, 0.5] is a 50-50
-                mix of 57Fe and 58Fe. If None this is read from isodata.
-            isoinv -- the four isotopes to use in the inversion, e.g [54, 56, 57, 58]. If
-                None this is read from isodata.
-            standard -- standard composition or unspiked run data. If
-                None this is read from isodata.
-    This routine performs the double spike inversion on measured data to return the
-    "true" composition of the sample. Output is returned as a dictionary with the
-    following fields
-            alpha -- the inferred natural fractionations
-            beta -- the inferred instrumental fractionations
-            prop -- the inferred proportions of spike to sample
-            sample -- the inferred compositions of the sample
-            mixture -- the inferred compositions of the mixture
-    Example
-    dsinversion(IsoData('Fe'),measured,[0, 0, 0.5, 0.5],[54, 56, 57, 58])"""
-
+    """Perform the double spike inversion for a given set of measurements.
+    
+    Args:
+        isodata: object of class IsoData, e.g. IsoData('Fe')
+        measured (array): a matrix of beam intensities. Columns correspond to the
+            different isotopes e.g. for Fe, first column is 54Fe, second is 56Fe,
+            third is 57Fe, fourth is 58Fe. The matrix should have the same number
+            of columns as there are isotopes available.
+        spike (array): a composition vector for the spike. e.g. [0, 0, 0.5, 0.5] is a 50-50
+            mix of 57Fe and 58Fe. If None this is read from isodata.
+        isoinv (array): the four isotopes to use in the inversion, e.g [54, 56, 57, 58]. If
+            None this is read from isodata.
+        standard (array): standard composition or unspiked run data. If
+            None this is read from isodata.
+     
+    Returns:
+        This routine performs the double spike inversion on measured data to return the
+        "true" composition of the sample. Output is returned as a dictionary with the
+        following fields
+            alpha: the inferred natural fractionations
+            beta: the inferred instrumental fractionations
+            prop: the inferred proportions of spike to sample
+            sample: the inferred compositions of the sample
+            mixture: the inferred compositions of the mixture
+            
+    Example:
+        >>> dsinversion(IsoData('Fe'),measured,[0, 0, 0.5, 0.5],[54, 56, 57, 58])"""
 
     # Get data from isodata if not supplied as arguments
     if spike is None:
         if isodata.spike is None:
-            raise Exception("No spike given")
+            raise Exception("No spike given.")
         else:
             spike = isodata.spike
     if isoinv is None:
         if hasattr(isodata, 'isoinv'):
             isoinv = isodata.isoinv
         else:
-            isoinv = isodata.isonum[0:4]
+            raise Exception("Inversion isotopes not specified.")
     if standard is None:
         standard = isodata.standard
 
@@ -45,6 +51,7 @@ def dsinversion(isodata, measured, spike=None, isoinv=None, standard=None):
     measured = np.array(measured)
     spike = np.array(spike)
     standard = np.array(standard)
+    isoinv = np.array(isoinv)
 
     # Duplicate so all matrices same size
     nspike, nstandard, nmeasured = 1, 1, 1
@@ -127,26 +134,29 @@ def normalise_composition(comp):
     return comp / comp.sum(axis=1)[:, np.newaxis]
 
 def ratioproptorealprop(lambda_, ratio_a, ratio_b): 
-    # convert a proportion in ratio space to one per mole
+    """Convert a proportion in ratio space to one per mole."""
     a = 1 + sum(ratio_a)
     b = 1 + sum(ratio_b)
     return lambda_*a / (lambda_*a+ (1-lambda_)*b)
 
 def realproptoratioprop(prop, ratio_a, ratio_b): 
-    # convert a proportion per mole into ratio space
+    """convert a proportion per mole into ratio space."""
     a = 1 + sum(ratio_a)
     b = 1 + sum(ratio_b)
     return prop*b / (prop*b+ (1-prop)*a)
 
 def dscorrection(P, n, T, m, **kwargs): 
-    # Routine for double spike fractionation correction
-    # takes as input ratios:
-    #       P -- log of ratio of atomic masses
-    #       n -- ratio of standard/ unspiked run
-    #       T -- ratio of spike
-    #       m -- ratio of measured
-    # outputs enriched ratio proportion (lambda), natural fractionation (alpha),
-    # and instrumental fractionation (beta) as a vector z=(lambda, (1-lambda)*alpha, beta)
+    """Routine for double spike fractionation correction using isotope ratios as inputs.
+    
+    Args:
+          P (array): log of ratio of atomic masses
+          n (array): isotope ratios of standard/ unspiked run
+          T (array): isotope ratios of spike
+          m (array): isotope ratios of measured
+          
+    Returns:
+        Spike ratio proportion (lambda), natural fractionation (alpha),
+        and instrumental fractionation (beta) as a vector z=(lambda, (1-lambda)*alpha, beta)"""
 
     # start by solving the linear problem
     b = np.transpose((m - n))
@@ -160,7 +170,7 @@ def dscorrection(P, n, T, m, **kwargs):
     return z
 
 def F_params(y, P, n, T, m):
-    # variables in the objective function
+    """Main variables in the objective function."""
     lambda_ = y[0]
     alpha = y[1] / (1 - lambda_)
     beta = y[2]
@@ -169,13 +179,13 @@ def F_params(y, P, n, T, m):
     return lambda_, alpha, beta, N, M
     
 def F(y, P, n, T, m): 
-    # The nonlinear equations to solve
+    """The nonlinear equations to solve."""
     lambda_, alpha, beta, N, M = F_params(y, P, n, T, m)
     fval = lambda_*T + (1-lambda_)*N - M
     return fval
 
 def J(y, P, n, T, m):
-    # The Jacobian of the nonlinear equations -- can speed up root finding, but is not required
+    """The Jacobian of the nonlinear equations -- can speed up root finding, but is not required"""
     lambda_, alpha, beta, N, M = F_params(y, P, n, T, m)
     dfdlambdaprime = T - N*(1 + alpha*P)
     dfdu = -N*P
@@ -185,19 +195,15 @@ def J(y, P, n, T, m):
 
 
 def ratio(data, isoidx):
-    # convert data to isotope ratios based on choice of isotopes
-    # first index is the denominator index
+    """Convert data to isotope ratios based on choice of isotopes. First index is the denominator index."""
     di = isoidx[0]
     ni = isoidx[1:]
     return data[...,ni]/data[...,di,np.newaxis]
 
-
 if __name__=="__main__":
-    idat = IsoData('Fe')
-    
-    #spike = np.array([[1e-9, 0.1, 0.4, 0.4],[1e-9, 0.1, 0.4, 0.4]])    
-    idat.set_spike([0.0, 0.0, 0.5, 0.5])
+    isodata_fe = IsoData('Fe')
+    isodata_fe.set_spike([0.0, 0.0, 0.5, 0.5])
     measured = np.array([0.2658, 4.4861, 2.6302, 2.6180])
 
-    z = dsinversion(idat, measured)
+    z = dsinversion(isodata_fe, measured)
     print(z)

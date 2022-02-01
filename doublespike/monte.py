@@ -1,27 +1,27 @@
+"""Routines for Monte Carlo mass spec simulation"""
 import numpy as np
 from numpy.random import default_rng
 from .isodata import IsoData
 from .inversion import dsinversion
     
 def monterun(isodata, prop = None, spike = None, alpha = 0.0, beta = 0.0, n = 1000): 
-    """ Generate a fake mass spectrometer run by Monte-Carlo simulation
+    """Generate a fake mass spectrometer run by Monte-Carlo simulation.
     
-        Parameters:
-            isodata -- object of class IsoData, e.g. IsoData('Fe')
-            prop -- proportion of spike in double spike-sample mix.
-               A vector of values can be specified if desired, to reflect changes over a run.
-            spike -- a composition vector for the spike. e.g. [0, 0, 0.5, 0.5] is a 50-50
-                mix of 57Fe and 58Fe. If None this is read from isodata.
-            alpha -- the natural fractionations (can be float or array of values)
-            beta -- the instrumental fractionations (can be float or array of values)
-            n -- number of Monte-Carlo samples to take. Default is 1000.
+    Args:
+        isodata: object of class IsoData, e.g. IsoData('Fe')
+        prop (float/array): proportion of spike in double spike-sample mix.
+            A vector of values can be specified if desired, to reflect changes over a run.
+        spike (array): a composition vector for the spike. e.g. [0, 0, 0.5, 0.5] is a 50-50
+            mix of 57Fe and 58Fe. If None this is read from isodata.
+        alpha (float/array): the natural fractionations (can be float or array of values)
+        beta (float/array): the instrumental fractionations (can be float or array of values)
+        n (int): number of Monte-Carlo samples to take. Default is 1000.
+
+        Note that behaviour depends on the error model specified in isodata.errormodel. 
     
-        Note that the IsoData object needs to have an errormodel set. 
-    
-        Example:
-            isodata = IsoData('Fe')
-            isodata.set_errormodel()
-            measured=monterun(isodata,0.5,[0, 0, 0.5, 0.5]) """
+    Example:
+        >>> isodata = IsoData('Fe')
+        >>> measured=monterun(isodata,0.5,[0, 0, 0.5, 0.5])"""
    
     # Get spike from isodata if not supplied as argument
     if spike is None:
@@ -99,6 +99,7 @@ def monterun(isodata, prop = None, spike = None, alpha = 0.0, beta = 0.0, n = 10
 
     
 def normalise_composition(comp):
+    """Normalise an array so rows have unit sum, i.e. rows are compositional vectors"""
     return comp / comp.sum(axis=1)[:, np.newaxis]    
     
 if __name__=="__main__":

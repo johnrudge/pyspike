@@ -1,32 +1,32 @@
 import numpy as np
 import csv
 from .isodata import IsoData, default_data
-from .errors import optimalspike
+from .optimal import optimalspike
 
-def cocktail(type_ = 'pure', filename = 'cookbook.csv', elements = None): 
-    """COCKTAIL   Generate double spike cocktail lists
-        COCKTAIL(type,filename,elements)
-            type -- type of spike, 'pure' or 'real'. Real spikes, such as those from
-               Oak Ridge National Labs, contain impurities (see 'maininput.csv'
-               or ISODATA.(element).rawspike) for their assumed compositions.
-               By default pure spikes are used.
-            filename -- file to store output (a CSV file).  Default is either 'cookbook_pure.csv'
-               or 'cookbook_real.csv' depending on the type.
-            elements -- which elements to include in the cookbook. Specify as a cell array
-               e.g. {'Ca','Fe'}. Default is all possible elements.
+def cocktail(type_ = 'pure', filename = 'cookbook.csv', isodatas = None): 
+    """Generate double spike cocktail lists.
     
-    This generates an exhaustive list of all possible double spikes for specified elements
-sorted in order of error.
+    Args:
+        type (str): type of spike, 'pure' or 'real'. Real spikes, such as those from
+               Oak Ridge National Labs, contain impurities. See IsoData(element).rawspike
+               for their assumed compositions. 
+        filename (str): file to store output (a CSV file).
+        isodatas (list of IsoData): data on elements to use in cocktail list
+            e.g. [IsoData['Ca'], IsoData['Fe']]. If None, it calculates for all
+            possible elements.
+            
+    This routine generates an exhaustive list of all possible double spikes for specified
+    elements sorted in order of error.
+
+    Example:
+        >>> cocktail('real')
+        
+    See also optimalspike"""
     
-    Note that a number of parameters are specified in the global variable ISODATA.
-    
-    Example
-        cocktail('real')"""
-    
-    
-    if elements is None:
+    if isodatas is None:
         elements = list(default_data.keys())
-    
+        isodatas = [IsoData(el) for el in elements]
+        
     print('Writing to '+filename)
     f = open(filename, 'w')
     writer = csv.writer(f)
@@ -35,7 +35,8 @@ sorted in order of error.
     writer.writerow([title])
     writer.writerow([])
     
-    for element in elements:
+    for isodata in isodatas:
+        element = isodata.element
         print(element)
         isodata = IsoData(element)
         isodata.set_errormodel()
@@ -76,6 +77,5 @@ sorted in order of error.
     f.close()
     print('Output written to '+filename)
     
-    
 if __name__=="__main__":
-    cocktail('real', filename='cocktail_real.csv', elements=['Fe','Ca'])
+    cocktail('real', filename='cocktail_real.csv', isodatas=[IsoData('Fe'),IsoData('Ca')])

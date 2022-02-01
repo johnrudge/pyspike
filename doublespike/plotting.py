@@ -47,6 +47,10 @@ def errorcurve2d(isodata, type_ = 'pure', isospike = None, isoinv = None, errorr
     else:
         isodata.isoindex(isospike)
     
+    # Ensure working with numpy arrays
+    isoinv = np.array(isoinv)
+    isospike = np.array(isospike)
+    
     # Convert isotope mass numbers to index numbers
     errorratio = isodata.isoindex(errorratio)
     isoinv = isodata.isoindex(isoinv)

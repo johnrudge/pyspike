@@ -46,7 +46,9 @@ def errorestimate(isodata, prop = None, spike = None, isoinv = None, errorratio 
             isoinv = isodata.isonum[0:4]
     
     standard = isodata.standard
+    spike = np.array(spike)
     spike = spike / sum(spike)
+    isoinv = np.array(isoinv)
     
     # Convert isotope mass numbers to index numbers
     errorratio = isodata.isoindex(errorratio)
@@ -97,6 +99,7 @@ def errorestimate(isodata, prop = None, spike = None, isoinv = None, errorratio 
     else:
         # Now change coordinates to get variance of ratio we're interested in
         newVAN = changedenomcov(AN,VAN,di,errorratio[1])
+        
         isonums = np.arange(isodata.nisos())
         newAni = isonums[isonums != errorratio[1]]
         erat = np.where(errorratio[0] == newAni)[0][0]
@@ -157,7 +160,6 @@ def covbeamtoratio(meanbeams = None,covbeams = None,di = None):
 
 def changedenomcov(data = None, datacov = None, olddi = None, newdi = None): 
     # change denominator of covariance matrix for given set of ratios
-    
     nisos = len(data) + 1
     oldni = np.concatenate((np.arange(olddi),np.arange(olddi+1,nisos)))
     dataplus = np.concatenate((data[0:olddi],np.array([1]),data[olddi:]))  
@@ -165,9 +167,14 @@ def changedenomcov(data = None, datacov = None, olddi = None, newdi = None):
     newni = np.concatenate((np.arange(newdi),np.arange(newdi+1,nisos)))
     
     datacovplus = np.zeros((nisos,nisos))
-    datacovplus[:,oldni][oldni,:] = datacov
+    #datacovplus[:,oldni][oldni,:] = datacov
+    # There must be a vectorized way of doing this!
+    for i,n in enumerate(oldni):
+        for j,m in enumerate(oldni):
+            datacovplus[n,m] = datacov[i,j]
+
     A = np.eye(nisos) / dataplus[newdi]
-    A[:,newdi] = A[:,newdi] - dataplus.T / (dataplus[newdi] ** 2)
+    A[:,newdi] = A[:,newdi] - dataplus / (dataplus[newdi] ** 2)
     newdatacovplus = A @ datacovplus @ A.T
     newdatacov = newdatacovplus[:,newni][newni,:]
     return newdatacov
@@ -379,6 +386,7 @@ def singlepureoptimalspike(isodata,beta = 0.0,alpha = 0.0,errorratio = None,isos
     
     # Helpful to rescale the error, to make everything roughly order 1 for the optimiser
     initialerror, _ = errorestimate(isodata,0.5,0.5*spikevector1 + (1 - 0.5)*spikevector2,isoinv,errorratio,beta,alpha)
+    print(initialerror)
     
     def objective(y):
         p = expit(y[0])  # use expit transformation to keep things in range
@@ -519,24 +527,29 @@ def singlerealoptimalspike(isodata,beta = 0.0,alpha = 0.0,errorratio = None,isos
 
 if __name__=="__main__":
     from .isodata import IsoData
-    #isodata = IsoData('Fe')
-    isodata = IsoData('Ca')
-    isoinv=[40, 44, 46, 48]
+    ##isodata = IsoData('Fe')
+    #isodata = IsoData('Ca')
+    #isoinv=[40, 44, 46, 48]
     
-    #spike = np.array([[1e-9, 0.1, 0.4, 0.4],[1e-9, 0.1, 0.4, 0.4]])    
-    #isodata.set_spike([0.0, 0.0, 0.5, 0.5])
-    isodata.set_errormodel()
+    ##spike = np.array([[1e-9, 0.1, 0.4, 0.4],[1e-9, 0.1, 0.4, 0.4]])    
+    ##isodata.set_spike([0.0, 0.0, 0.5, 0.5])
+    #isodata.set_errormodel()
 
-    #alpha_err, ppm_err = errorestimate(isodata, prop = 0.5, alpha = -0.2, beta = 1.8 )
+    ##alpha_err, ppm_err = errorestimate(isodata, prop = 0.5, alpha = -0.2, beta = 1.8 )
     
-    optspike,optprop,opterr,optisoinv,optspikeprop,optppmperamu = optimalrealspike(isodata, isospike = [0,3], isoinv = isoinv)
+    #optspike,optprop,opterr,optisoinv,optspikeprop,optppmperamu = optimalrealspike(isodata, isospike = [0,3], isoinv = isoinv)
     
-    #optspike,optprop,opterr,optspikeprop,optppmperamu = singlerealoptimalspike(isodata, isospike = np.array([0, 1, 2, 3]))
+    ##optspike,optprop,opterr,optspikeprop,optppmperamu = singlerealoptimalspike(isodata, isospike = np.array([0, 1, 2, 3]))
     
-    print(optspike)
-    print(optprop)
-    print(opterr)
-    #print(optisoinv)
-    print(optspikeprop)
-    print(optppmperamu)
+    #print(optspike)
+    #print(optprop)
+    #print(opterr)
+    ##print(optisoinv)
+    #print(optspikeprop)
+    #print(optppmperamu)
+    
+    isodata_pb = IsoData('Pb')
+    isodata_pb.set_errormodel()
+    print(optimalspike(isodata_pb,'pure',errorratio=[206,204]))
+    
 

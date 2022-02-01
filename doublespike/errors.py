@@ -246,7 +246,7 @@ def fcerrorpropagation(z,AP,An,AT,Am,VAn,VAT,VAm,srat):
     return Vz, VAN, VAM
 
 
-def optimalspike(isodata,type_ = 'pure',isospike = None,isoinv = None,errorratio = [],alpha = 0.0,beta = 0.0): 
+def optimalspike(isodata,type_ = 'pure',isospike = None,isoinv = None,errorratio = None,alpha = 0.0,beta = 0.0): 
     """OPTIMALSPIKE    Find the optimal double spike composition and double spike-sample mixture proportions
     [optspike,optprop,opterr,optisoinv,optspikeprop,optppmperamu]
     =OPTIMALSPIKE(element,type,isospike,isoinv,errorratio,alpha,beta)

@@ -110,12 +110,12 @@ def optimalspike(isodata,type_ = 'pure',isospike = None,isoinv = None,errorratio
     max_noutput = min(len(ix), int(6*binom(isodata.nisos(),4)))
     ix = ix[0:max_noutput]
     
-    out = {'opterr': opterr[ix],
-           'optppmperamu': optppmperamu[ix],
-           'optspike': optspike[ix,:],
+    out = {'optspike': optspike[ix,:],
            'optprop': optprop[ix],
+           'opterr': opterr[ix],
            'optisoinv': isodata.isonum[optisoinv[ix,:]],
-           'optspikeprop': optspikeprop[ix,:]}
+           'optspikeprop': optspikeprop[ix,:],
+           'optppmperamu': optppmperamu[ix]}
            
     return out
     

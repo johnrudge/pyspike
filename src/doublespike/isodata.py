@@ -97,11 +97,7 @@ class IsoData():
         return "IsoData()"
     
     def __str__(self):
-        txt = "element: " + str(self.element) + "\n" \
-            + "isonum: " + str(self.isonum) + "\n" \
-            + "mass: " + str(self.mass) + "\n" \
-            + "standard: " + str(self.standard) + "\n" \
-            + "spike: " + str(self.spike)
+        txt ='\n '.join("%s: %s" % item for item in vars(self).items())
         return txt
     
     def set_element(self, element):
@@ -240,8 +236,13 @@ class IsoData():
         
 if __name__=="__main__":
     idat = IsoData('Fe')
-    print(idat.isoindex([56,57,56]))
-    print(idat.isolabel())
-    print(idat.nisos())
-    print(idat.nratios())
+    #attrs = vars(idat)
+    #print(', '.join("%s: %s" % item for item in attrs.items()))
+    print(idat)
+    
+    
+    #print(idat.isoindex([56,57,56]))
+    #print(idat.isolabel())
+    #print(idat.nisos())
+    #print(idat.nratios())
 

@@ -179,23 +179,13 @@ def changedenomcov(data = None, datacov = None, olddi = None, newdi = None):
     newdatacov = newdatacovplus[:,newni][newni,:]
     return newdatacov
 
-
-def fcerrorpropagation(z,AP,An,AT,Am,VAn,VAT,VAm,srat): 
-    """Linear error propagation for the fractionation correction."""
+def sensitivity(z, P, n, T, m):
     lambda_ = z[0]
     alpha = z[1]
     beta = z[2]
-    AM = Am * np.exp(- AP * beta)
-    AN = An * np.exp(- AP * alpha)
     
-    # Select appropriate ratios
-    P = AP[srat]
-    N = AN[srat]
-    T = AT[srat]
-    M = AM[srat]
-    VT = VAT[srat,:][:,srat]
-    Vm = VAm[srat,:][:,srat]
-    Vn = VAn[srat,:][:,srat]
+    N = n * np.exp(- P * alpha)
+    M = m * np.exp(- P * beta)
     
     # calculate various Jacobian matrices
     dfdlambda = T - N*(1 + alpha*P)
@@ -214,8 +204,23 @@ def fcerrorpropagation(z,AP,An,AT,Am,VAn,VAT,VAm,srat):
     dzdm = - K @ (np.linalg.solve(dfdy,dfdm))
     dzdn = - K @ (np.linalg.solve(dfdy,dfdn))
     
-    # Covariance matix for (lambda,beta,alpha)
-    Vz = dzdT @ VT @ dzdT.T + dzdm @ Vm @ dzdm.T + dzdn @ Vn @ dzdn.T
+    return dzdn, dzdm, dzdT
+
+def all_sensitivity(z, AP, An, AT, Am, srat):
+    lambda_ = z[0]
+    alpha = z[1]
+    beta = z[2]
+    AM = Am * np.exp(- AP * beta)
+    AN = An * np.exp(- AP * alpha)
+    
+    P = AP[srat]
+    n = An[srat]
+    N = AN[srat]
+    T = AT[srat]
+    M = AM[srat]
+    m = Am[srat]
+    
+    dzdn, dzdm, dzdT = sensitivity(z, P, n, T, m)
     
     # full matrices for all ratios
     nratios = len(An)
@@ -226,7 +231,6 @@ def fcerrorpropagation(z,AP,An,AT,Am,VAn,VAT,VAm,srat):
     dzdAn[0:3,:][:,srat] = dzdn
     dzdAm[0:3,:][:,srat] = dzdm
     
-    # Covariance matrix of sample
     dalphadAT = dzdAT[1,:]
     dalphadAn = dzdAn[1,:]
     dalphadAm = dzdAm[1,:]
@@ -236,10 +240,7 @@ def fcerrorpropagation(z,AP,An,AT,Am,VAn,VAT,VAm,srat):
     dANdAT = - NP @ dalphadAT[np.newaxis,:]
     dANdAn = np.diag(np.exp(np.multiply(- AP,alpha))) - NP @ dalphadAn[np.newaxis,:]
     dANdAm = - NP @ dalphadAm[np.newaxis,:]
-
-    VAN = dANdAn @ VAn @ dANdAn.T + dANdAT @ VAT @ dANdAT.T + dANdAm @ VAm @ dANdAm.T
     
-    # Covariance matrix of mixture
     dbetadAT = dzdAT[2,:]
     dbetadAn = dzdAn[2,:]
     dbetadAm = dzdAm[2,:]
@@ -249,7 +250,23 @@ def fcerrorpropagation(z,AP,An,AT,Am,VAn,VAT,VAm,srat):
     dAMdAT = - MP @ dbetadAT[np.newaxis,:]
     dAMdAn = - MP @ dbetadAn[np.newaxis,:]
     dAMdAm = np.diag(np.exp(np.multiply(- beta,AP))) - MP @ dbetadAm[np.newaxis,:]
+    
+    return dzdAT, dzdAm, dzdAn, dANdAn, dANdAT, dANdAm, dAMdAn, dAMdAT, dAMdAm
+    
+
+def fcerrorpropagation(z,AP,An,AT,Am,VAn,VAT,VAm,srat): 
+    """Linear error propagation for the fractionation correction."""
+    VT = VAT[srat,:][:,srat]
+    Vm = VAm[srat,:][:,srat]
+    Vn = VAn[srat,:][:,srat]
+    
+    dzdAT, dzdAm, dzdAn, dANdAn, dANdAT, dANdAm, dAMdAn, dAMdAT, dAMdAm = all_sensitivity(z, AP, An, AT, Am, srat)
+    
+    # Covariance matix for z=(lambda,beta,alpha), sample, mixture
+    Vz = dzdAn @ VAn @ dzdAn.T + dzdAT @ VAT @ dzdAT.T + dzdAm @ VAm @ dzdAm.T 
+    VAN = dANdAn @ VAn @ dANdAn.T + dANdAT @ VAT @ dANdAT.T + dANdAm @ VAm @ dANdAm.T
     VAM = dAMdAn @ VAn @ dAMdAn.T + dAMdAT @ VAT @ dAMdAT.T + dAMdAm @ VAm @ dAMdAm.T
+    
     return Vz, VAN, VAM
 
 if __name__=="__main__":

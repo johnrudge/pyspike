@@ -43,7 +43,14 @@ def cocktail(type_ = 'pure', filename = 'cookbook.csv', isodatas = None):
         isodata = IsoData(element)
         isodata.set_errormodel()
         if (type_=='pure') or (type_=='real' and isodata.nrawspikes() > 1):
-            optspike,optprop,opterr,optisoinv,optspikeprop,optppmperamu = optimalspike(isodata,type_)
+            os = optimalspike(isodata,type_)
+            optspike = os['optspike']
+            opterr = os['opterr']
+            optisoinv = os['optisoinv']
+            optprop = os['optprop']
+            optspikeprop = os['optspikeprop']
+            optppmperamu = os['optppmperamu']
+
             optisoinv = isodata.isoindex(optisoinv)
             
             isoname = isodata.isoname()
@@ -80,4 +87,5 @@ def cocktail(type_ = 'pure', filename = 'cookbook.csv', isodatas = None):
     print('Output written to '+filename)
     
 if __name__=="__main__":
+    #cocktail('pure', filename='cocktail_pure.csv', isodatas=[IsoData('Fe'),IsoData('Ca')])
     cocktail('real', filename='cocktail_real.csv', isodatas=[IsoData('Fe'),IsoData('Ca')])

@@ -12,6 +12,22 @@ https://dx.doi.org/10.1016/j.chemgeo.2009.05.010
 and at:
 
 https://johnrudge.com/doublespike
+
+Functions:
+    cocktail               - Generate double spike cocktail lists
+    dsinversion            - Do the double spike inversion for a given set of measurements
+    errorcurve             - A plot of error as a function of double spike-sample proportions for a given
+                             double spike composition
+    errorcurve2            - A plot of error as a function of double spike proportions for a given double
+                             spike-sample proportion
+    errorcurve2d           - A 2D contour plot of error as a function of double spike composition and
+                             double spike-sample proportions
+    errorcurveoptimalspike - Plot error curves for the optimal spike composition
+    errorestimate          - Calculate the error in the natural fractionation factor or a chosen ratio
+                             by linear error propagation
+    monterun               - Generate a fake mass spectrometer run by Monte-Carlo simulation
+    optimalspike           - Find the optimal double spike composition and double spike-sample mixture
+                             proportions
 """
 
 __version__ = '0.1.3'

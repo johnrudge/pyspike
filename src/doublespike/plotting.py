@@ -75,12 +75,12 @@ def errorcurve2d(isodata, type_ = 'pure', isospike = None, isoinv = None, errorr
     vfun = np.vectorize(fun)
     errvals,ppmperamuvals = vfun(iv, jv)
     
-    optspike,optprop,opterr,optisoinv,optspikeprop,optppmperamu = optimalspike(isodata,type_,isospike,isoinv,errorratio,alpha,beta)
+    os = optimalspike(isodata,type_,isospike,isoinv,errorratio,alpha,beta)
     
     if plottype == 'ppmperamu':
-        C = plt.contour(prop,spikeprop,ppmperamuvals,np.linspace(optppmperamu,(1 + threshold) * optppmperamu,ncontour + 1),**kwargs)
+        C = plt.contour(prop,spikeprop,ppmperamuvals,np.linspace(os['optppmperamu'],(1 + threshold) * os['optppmperamu'],ncontour + 1),**kwargs)
     else:
-        C = plt.contour(prop,spikeprop,errvals,np.linspace(opterr[0],(1 + threshold) * opterr[0],ncontour + 1),**kwargs)
+        C = plt.contour(prop,spikeprop,errvals,np.linspace(os['opterr'][0],(1 + threshold) * os['opterr'][0],ncontour + 1),**kwargs)
     
     plt.xlim(np.array([0,1]))
     plt.ylim(np.array([0,1]))
@@ -99,7 +99,7 @@ def errorcurve2d(isodata, type_ = 'pure', isospike = None, isoinv = None, errorr
     else:
         plt.title('Error in '+isolabel[errorratio[0]]+'/',isolabel[errorratio[1]]+' (1SD) with '+invisostring)
     
-    plt.plot(optprop[0],optspikeprop[0,isospike[0]],'rx')
+    plt.plot(os['optprop'][0],os['optspikeprop'][0,isospike[0]],'rx')
 
 def errorcurve(isodata,spike = None,isoinv = None,errorratio = None,alpha = 0.0,beta = 0.0,plottype = 'default',**kwargs): 
     """Plot of error as a function of double spike-sample proportions for a given double spike composition.
@@ -282,22 +282,22 @@ def errorcurveoptimalspike(isodata,type_ = 'pure',isospike = None,isoinv = None,
     isospike = isodata.isoindex(isospike)
     isoinv = isodata.isoindex(isoinv)
     # Find the optimal spikes
-    optspike,optprop,opterr,optisoinv,optspikeprop,optppmperamu = optimalspike(isodata,type_,isospike,isoinv,errorratio,alpha,beta)
+    os = optimalspike(isodata,type_,isospike,isoinv,errorratio,alpha,beta)
     isolabel = isodata.isolabel()
     rawspikelabel = isodata.rawspikelabel()
-    for j in range(optspike.shape[0]):
+    for j in range(os['optspike'].shape[0]):
         if type_ == 'pure':
-            spiked = np.where(optspike[j,:] > 0)[0]
+            spiked = np.where(os['optspike'][j,:] > 0)[0]
             leglabel = isolabel[spiked[0]]+'-'+isolabel[spiked[1]]
         else:
-            spiked = np.where(optspikeprop[j,:] > 0)[0]
+            spiked = np.where(os['optspikeprop'][j,:] > 0)[0]
             leglabel =rawspikelabel[spiked[0]]+'-'+rawspikelabel[spiked[1]]
-        errorcurve(isodata,optspike[j,:],isoinv,errorratio,alpha,beta,plottype,label=leglabel)
+        errorcurve(isodata,os['optspike'][j,:],isoinv,errorratio,alpha,beta,plottype,label=leglabel)
         
     if plottype=='ppmperamu':
-        plt.ylim(np.array([0,5 * np.amin(optppmperamu)]))
+        plt.ylim(np.array([0,5 * np.amin(os['optppmperamu'])]))
     else:
-        plt.ylim(np.array([0,5 * np.amin(opterr)]))
+        plt.ylim(np.array([0,5 * np.amin(os['opterr'])]))
     
     plt.legend(loc='upper right')
 

@@ -180,6 +180,7 @@ def changedenomcov(data = None, datacov = None, olddi = None, newdi = None):
     return newdatacov
 
 def sensitivity(z, P, n, T, m):
+    """Calculate the derivatives of the z=(lambda,alpha, beta) vector with respect to the input n, T, m ratios."""
     lambda_ = z[0]
     alpha = z[1]
     beta = z[2]
@@ -207,6 +208,7 @@ def sensitivity(z, P, n, T, m):
     return dzdn, dzdm, dzdT
 
 def all_sensitivity(z, AP, An, AT, Am, srat):
+    """As sensitivity, but with all ratios, not just those used in inversion."""
     lambda_ = z[0]
     alpha = z[1]
     beta = z[2]
@@ -215,11 +217,8 @@ def all_sensitivity(z, AP, An, AT, Am, srat):
     
     P = AP[srat]
     n = An[srat]
-    N = AN[srat]
     T = AT[srat]
-    M = AM[srat]
     m = Am[srat]
-    
     dzdn, dzdm, dzdT = sensitivity(z, P, n, T, m)
     
     # full matrices for all ratios
@@ -253,7 +252,6 @@ def all_sensitivity(z, AP, An, AT, Am, srat):
     
     return dzdAT, dzdAm, dzdAn, dANdAn, dANdAT, dANdAm, dAMdAn, dAMdAT, dAMdAm
     
-
 def fcerrorpropagation(z,AP,An,AT,Am,VAn,VAT,VAm,srat): 
     """Linear error propagation for the fractionation correction."""
     VT = VAT[srat,:][:,srat]

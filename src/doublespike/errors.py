@@ -62,7 +62,7 @@ def errorestimate(isodata, prop = None, spike = None, isoinv = None, errorratio 
     di = isoinv[0]
     
     # Convert compositional vectors to isotopic ratios
-    z, AP, An, AT, Am = ratiodata(isodata, di, prop, spike, alpha, beta)
+    z, AP, An, AT, Am, AN, AM = ratiodata(isodata, di, prop, spike, alpha, beta)
     
     # Convert measured back to a compositional vector    
     measured = isodata.composition(Am, di)
@@ -185,6 +185,8 @@ def ratiodata(isodata, di, prop, spike = None, alpha = 0.0, beta = 0.0):
         An (array): isotopic ratios of standard/ unspiked run
         AT (array): isotopic ratios of spike
         Am (array): isotopic ratios of measurement
+        AN (array): isotopic ratios of sample
+        AM (array): isotopic ratios of mixture
     """
     if spike is None:
         if isodata.spike is None:
@@ -204,7 +206,7 @@ def ratiodata(isodata, di, prop, spike = None, alpha = 0.0, beta = 0.0):
     AM = lambda_*AT + (1-lambda_)*AN
     Am = AM * np.exp(AP*beta)
     
-    return z, AP, An, AT, Am
+    return z, AP, An, AT, Am, AN, AM
 
 def z_sensitivity(z, P, n, T, m):
     """Calculate the derivatives of the z=(lambda,alpha, beta) vector with respect to the input n, T, m ratios."""

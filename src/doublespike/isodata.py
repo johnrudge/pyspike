@@ -250,7 +250,6 @@ class IsoData():
         comp_shape[-1] += 1  
         comp = np.ones(comp_shape)
         comp[ni] = data
-        print(comp)
         comp = normalise_composition(comp)
         return comp
         

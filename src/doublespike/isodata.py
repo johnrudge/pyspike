@@ -110,7 +110,7 @@ class IsoData():
         self.isonum = np.array(isonum, dtype=int)
         
     def set_isoinv(self, isoinv):
-        self.isonum = np.array(isoinv, dtype=int)
+        self.isoinv = np.array(isoinv, dtype=int)
     
     def set_standard(self, standard):
         self.standard = np.array(standard)
@@ -144,7 +144,7 @@ class IsoData():
     
     def isoname(self):
         """Names of the isotopes."""
-        return [self.element + str(i) for i in self.isonum]
+        return [str(i) + self.element for i in self.isonum]
     
     def isolabel(self):
         """Isotope labels for plotting."""
@@ -234,15 +234,87 @@ class IsoData():
         """
         self.errormodel = errormodel
         
+    def ratio(self, composition, denominator_isotope):
+        """Convert a compositional array into array of isotopic ratios."""
+        di = self.isoindex(denominator_isotope)
+        ni = np.arange(self.nisos())
+        ni = ni[ni != di]
+        return composition[...,ni]/composition[...,di,np.newaxis]
+    
+    def composition(self, data, denominator_isotope):
+        """Convert an array of isotopic ratios to an array of compositional vectors."""
+        di = self.isoindex(denominator_isotope)
+        ni = np.arange(self.nisos())
+        ni = ni[ni != di]
+        comp_shape = list(data.shape)
+        comp_shape[-1] += 1  
+        comp = np.ones(comp_shape)
+        comp[ni] = data
+        print(comp)
+        comp = normalise_composition(comp)
+        return comp
+        
+    def invrat(self, isoinv = None):
+        """Indices of isotope ratios used in inversion."""
+        if isoinv is None:
+            isoinv = self.isoinv
+            
+        isoinv = self.isoindex(isoinv) # convert to indices
+        
+        isonum = np.arange(self.nisos())
+        isonum = isonum[isonum != isoinv[0]]
+        isonum = np.concatenate((np.array([isoinv[0]]), isonum))
+
+        invrat = np.array([np.where(isonum == i)[0][0] for i in isoinv])
+        invrat = invrat[1:] - 1
+        return invrat
+    
+    def rationame(self, denominator_isotope):
+        """Names of the isotopic ratios."""
+        di = self.isoindex(denominator_isotope)
+        ni = np.arange(self.nisos())
+        ni = ni[ni != di]
+        return np.array([str(i) + self.element +'/' + str(self.isonum[di]) + self.element   for i in self.isonum[ni]])
+    
+    def ratioidx(self, numerator_isotope, denominator_isotope):
+        """The index corresponding to a particular isotopic ratio."""
+        di = self.isoindex(denominator_isotope)
+        ni = self.isoindex(numerator_isotope)
+        if ni<di:
+            return ni
+        if ni==di:
+            return None
+        if ni>di:
+            return ni-1
+        
+def normalise_composition(comp):
+    """Normalise rows of an array to unit sum, i.e. rows are compositional vectors."""
+    s = comp.sum(axis=-1)
+    if type(s) is float:
+        return comp/s
+    else:
+        return comp / s[..., np.newaxis]
+
+def ratioproptorealprop(lambda_, ratio_a, ratio_b): 
+    """Convert a proportion in ratio space to one per mole."""
+    a = 1 + sum(ratio_a)
+    b = 1 + sum(ratio_b)
+    return lambda_*a / (lambda_*a+ (1-lambda_)*b)
+
+def realproptoratioprop(prop, ratio_a, ratio_b): 
+    """Convert a proportion per mole into ratio space."""
+    a = 1 + sum(ratio_a)
+    b = 1 + sum(ratio_b)
+    return prop*b / (prop*b+ (1-prop)*a) 
+
+def ratio(data, isoidx):
+    """Convert data to isotope ratios based on choice of isotopes. First index is the denominator index."""
+    di = isoidx[0]
+    ni = isoidx[1:]
+    return data[...,ni]/data[...,di,np.newaxis]
+
+
 if __name__=="__main__":
     idat = IsoData('Fe')
-    #attrs = vars(idat)
-    #print(', '.join("%s: %s" % item for item in attrs.items()))
     print(idat)
-    
-    
-    #print(idat.isoindex([56,57,56]))
-    #print(idat.isolabel())
-    #print(idat.nisos())
-    #print(idat.nratios())
 

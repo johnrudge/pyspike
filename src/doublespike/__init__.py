@@ -37,6 +37,6 @@ from .isodata import IsoData
 from .inversion import dsinversion
 from .monte import monterun
 from .cocktail import cocktail
-from .errors import errorestimate
+from .errors import errorestimate, ratiodata, sensitivity
 from .optimal import optimalspike
 from .plotting import errorcurve, errorcurve2, errorcurve2d, errorcurveoptimalspike

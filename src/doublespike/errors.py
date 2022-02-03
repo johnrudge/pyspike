@@ -1,7 +1,7 @@
 """Module for performing linear error propagation."""
 
 import numpy as np
-from .inversion import realproptoratioprop, ratio
+from .isodata import realproptoratioprop, ratio
 
 def errorestimate(isodata, prop = None, spike = None, isoinv = None, errorratio = None, alpha = 0.0, beta = 0.0): 
     """Calculate the error in the natural fractionation factor or a chosen ratio by linear error propagation.
@@ -43,9 +43,9 @@ def errorestimate(isodata, prop = None, spike = None, isoinv = None, errorratio 
         if hasattr(isodata, 'isoinv'):
             isoinv = isodata.isoinv
         else:
-            isoinv = isodata.isonum[0:4]
+            raise Exception('No inversion isotopes set')
     
-    standard = isodata.standard
+    # Ensure working with numpy arrays
     spike = np.array(spike)
     spike = spike / sum(spike)
     isoinv = np.array(isoinv)
@@ -54,44 +54,28 @@ def errorestimate(isodata, prop = None, spike = None, isoinv = None, errorratio 
     errorratio = isodata.isoindex(errorratio)
     isoinv = isodata.isoindex(isoinv)
     
-    # Choose denominator from largest spike value
+    # Choose denominator isotope from largest spike value
     ix = np.argmax(spike[isoinv])
     deno = isoinv[ix]
     nume = isoinv[isoinv != deno]
     isoinv = np.concatenate((np.array([deno]),nume))
+    di = isoinv[0]
     
-    isonum = np.arange(isodata.nisos())
-    isonum = isonum[isonum != isoinv[0]]
-    isonum = np.concatenate((np.array([isoinv[0]]), isonum))
+    # Convert compositional vectors to isotopic ratios
+    z, AP, An, AT, Am = ratiodata(isodata, di, prop, spike, alpha, beta)
     
-    # Calculate ratios
-    AP = np.log(ratio(isodata.mass, isonum))
-    AT = ratio(spike, isonum)
-    An = ratio(standard, isonum)
+    # Convert measured back to a compositional vector    
+    measured = isodata.composition(Am, di)
     
-    # Now calculate sample ratio, lambda etc
-    AN = An * np.exp(-AP*alpha)
-    lambda_ = realproptoratioprop(prop, AT, AN)
-    z = np.array([lambda_,alpha,beta])
-    AM = lambda_*AT + (1-lambda_)*AN
-    Am = AM * np.exp(AP*beta)
+    # Calculate the covariance matrices of n, T, and m
+    VAn = calcratiocov(isodata.standard,isodata.errormodel['standard'],di,None,prop)
+    VAT = calcratiocov(spike,isodata.errormodel['spike'],di,None,prop)
+    VAm = calcratiocov(measured,isodata.errormodel['measured'],di,None,prop)
     
-    # Error propagation
-    measured = np.ones(isodata.nisos())
-    measured[isonum[1:]] = Am
-    measured = measured / sum(measured)
-    isonorm = np.arange(isodata.nisos()) # normalise so that the sum of all beams is the mean intensity
+    # invrat gives indices of ratios used in inversion
+    invrat = isodata.invrat(isoinv)
     
-    di = deno
-    VAn = calcratiocov(isodata.standard,isodata.errormodel['standard'],di,isonorm,prop)
-    VAT = calcratiocov(spike,isodata.errormodel['spike'],di,isonorm,prop)
-    VAm = calcratiocov(measured,isodata.errormodel['measured'],di,isonorm,prop)
-    
-    # srat gives indices of ratios used in inversion
-    srat = np.array([np.where(isonum == i)[0][0] for i in isoinv])
-    srat = srat[1:] - 1
-    
-    Vz, VAN, _ = fcerrorpropagation(z,AP,An,AT,Am,VAn,VAT,VAm,srat)
+    Vz, VAN, _ = fcerrorpropagation(z,AP,An,AT,Am,VAn,VAT,VAm,invrat)
 
     # Error to return
     if errorratio is None:
@@ -121,6 +105,7 @@ def calcratiocov(composition = None, errormodel = None, di = None, isonorm = Non
     # prop is the proportion of spike in the spike-sample mix
     
     if isonorm is None:
+        # normalise so that the sum of all beams is the mean intensity
         isonorm = np.arange(composition.shape[0])
     
     # first normalise composition so it is really a composition (unit sum)
@@ -152,10 +137,10 @@ def covbeamtoratio(meanbeams = None,covbeams = None,di = None):
     M = covbeams[ii, :][:,ii]
     
     D = np.diag(1/d * np.ones(len(n)))
-    S = - np.transpose(n) / (d ** 2)
+    S = - n / (d ** 2)
     A = np.hstack((D, S[:,np.newaxis]))
     
-    V = (A @ M) @ (np.transpose(A))
+    V = A @ M @ A.T
     return V
 
 def changedenomcov(data = None, datacov = None, olddi = None, newdi = None): 
@@ -179,7 +164,49 @@ def changedenomcov(data = None, datacov = None, olddi = None, newdi = None):
     newdatacov = newdatacovplus[:,newni][newni,:]
     return newdatacov
 
-def sensitivity(z, P, n, T, m):
+def ratiodata(isodata, di, prop, spike = None, alpha = 0.0, beta = 0.0):
+    """Calculate isotopic ratios describing system.
+    
+    Args:
+        isodata: object of class IsoData, e.g. IsoData('Fe')
+        di (int): denominator isotope, e.g. 56
+        prop (float): proportion of double spike in double spike-sample mix.
+        spike (array): the isotopic composition of the spike e.g. [0, 0.5, 0, 0.5]
+            corresponds to a 50-50 mixture of the 2nd and 4th isotopes
+            (56Fe and 58Fe) in the case of Fe.
+        alpha (float): natural fractionation factor
+        beta (float): instrumental fractionation factor
+        
+        If spike is set as None, values from isodata will be used instead.
+    
+    Returns:
+        z (array): vector of model parameters (lambda, alpha, beta)
+        AP (array): log of ratio of atomic masses
+        An (array): isotopic ratios of standard/ unspiked run
+        AT (array): isotopic ratios of spike
+        Am (array): isotopic ratios of measurement
+    """
+    if spike is None:
+        if isodata.spike is None:
+            raise Exception("No spike given")
+        else:
+            spike = isodata.spike
+    
+    # Calculate ratios
+    AP = np.log(isodata.ratio(np.array(isodata.mass), di))
+    AT = isodata.ratio(np.array(spike), di)
+    An = isodata.ratio(np.array(isodata.standard), di)
+    
+    # Now calculate sample ratio, lambda etc
+    AN = An * np.exp(-AP*alpha)
+    lambda_ = realproptoratioprop(prop, AT, AN)
+    z = np.array([lambda_,alpha,beta])
+    AM = lambda_*AT + (1-lambda_)*AN
+    Am = AM * np.exp(AP*beta)
+    
+    return z, AP, An, AT, Am
+
+def z_sensitivity(z, P, n, T, m):
     """Calculate the derivatives of the z=(lambda,alpha, beta) vector with respect to the input n, T, m ratios."""
     lambda_ = z[0]
     alpha = z[1]
@@ -207,28 +234,45 @@ def sensitivity(z, P, n, T, m):
     
     return dzdn, dzdm, dzdT
 
-def all_sensitivity(z, AP, An, AT, Am, srat):
-    """As sensitivity, but with all ratios, not just those used in inversion."""
+def sensitivity(z, AP, An, AT, Am, invrat):
+    """Returns the partial derivatives describing the sensitivity of model outputs to model inputs.
+        
+    Args:
+        z (array): vector of (lambda, alpha, beta)
+        AP (array): log of ratio of atomic masses
+        An (array): isotopic ratios of standard/ unspiked run
+        AT (array): isotopic ratios of spike
+        Am (array): isotopic ratios of measurement
+        invrat: indices of isotopic ratios used in inversion
+            
+    Returns the derivatives:
+        dzdAn, dzdAT, dzdAm,
+        dANdAn, dANdAT, dANdAm,
+        dAMdAn, dAMdAT, dAMdAm,
+        
+        where AN are isotopic ratios of sample
+        and AM are isotopic ratios of mixture.        
+    """
     lambda_ = z[0]
     alpha = z[1]
     beta = z[2]
     AM = Am * np.exp(- AP * beta)
     AN = An * np.exp(- AP * alpha)
     
-    P = AP[srat]
-    n = An[srat]
-    T = AT[srat]
-    m = Am[srat]
-    dzdn, dzdm, dzdT = sensitivity(z, P, n, T, m)
+    P = AP[invrat]
+    n = An[invrat]
+    T = AT[invrat]
+    m = Am[invrat]
+    dzdn, dzdm, dzdT = z_sensitivity(z, P, n, T, m)
     
     # full matrices for all ratios
     nratios = len(An)
     dzdAT = np.zeros((3,nratios))
     dzdAn = np.zeros((3,nratios))
     dzdAm = np.zeros((3,nratios))
-    dzdAT[0:3,:][:,srat] = dzdT
-    dzdAn[0:3,:][:,srat] = dzdn
-    dzdAm[0:3,:][:,srat] = dzdm
+    dzdAT[0:3,:][:,invrat] = dzdT
+    dzdAn[0:3,:][:,invrat] = dzdn
+    dzdAm[0:3,:][:,invrat] = dzdm
     
     dalphadAT = dzdAT[1,:]
     dalphadAn = dzdAn[1,:]
@@ -237,7 +281,7 @@ def all_sensitivity(z, AP, An, AT, Am, srat):
     NP = AN*AP
     NP = NP[:,np.newaxis]
     dANdAT = - NP @ dalphadAT[np.newaxis,:]
-    dANdAn = np.diag(np.exp(np.multiply(- AP,alpha))) - NP @ dalphadAn[np.newaxis,:]
+    dANdAn = np.diag(np.exp(- alpha*AP)) - NP @ dalphadAn[np.newaxis,:]
     dANdAm = - NP @ dalphadAm[np.newaxis,:]
     
     dbetadAT = dzdAT[2,:]
@@ -248,17 +292,17 @@ def all_sensitivity(z, AP, An, AT, Am, srat):
     MP = MP[:,np.newaxis]
     dAMdAT = - MP @ dbetadAT[np.newaxis,:]
     dAMdAn = - MP @ dbetadAn[np.newaxis,:]
-    dAMdAm = np.diag(np.exp(np.multiply(- beta,AP))) - MP @ dbetadAm[np.newaxis,:]
+    dAMdAm = np.diag(np.exp(- beta*AP)) - MP @ dbetadAm[np.newaxis,:]
     
-    return dzdAT, dzdAm, dzdAn, dANdAn, dANdAT, dANdAm, dAMdAn, dAMdAT, dAMdAm
+    return dzdAn, dzdAT, dzdAm, dANdAn, dANdAT, dANdAm, dAMdAn, dAMdAT, dAMdAm
     
-def fcerrorpropagation(z,AP,An,AT,Am,VAn,VAT,VAm,srat): 
+def fcerrorpropagation(z,AP,An,AT,Am,VAn,VAT,VAm,invrat): 
     """Linear error propagation for the fractionation correction."""
-    VT = VAT[srat,:][:,srat]
-    Vm = VAm[srat,:][:,srat]
-    Vn = VAn[srat,:][:,srat]
+    Vn = VAn[invrat,:][:,invrat]
+    VT = VAT[invrat,:][:,invrat]
+    Vm = VAm[invrat,:][:,invrat]
     
-    dzdAT, dzdAm, dzdAn, dANdAn, dANdAT, dANdAm, dAMdAn, dAMdAT, dAMdAm = all_sensitivity(z, AP, An, AT, Am, srat)
+    dzdAn, dzdAT, dzdAm, dANdAn, dANdAT, dANdAm, dAMdAn, dAMdAT, dAMdAm = sensitivity(z, AP, An, AT, Am, invrat)
     
     # Covariance matix for z=(lambda,beta,alpha), sample, mixture
     Vz = dzdAn @ VAn @ dzdAn.T + dzdAT @ VAT @ dzdAT.T + dzdAm @ VAm @ dzdAm.T 

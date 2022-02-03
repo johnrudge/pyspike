@@ -1,6 +1,6 @@
 """Routines for performing the double spike inversion."""
 
-from .isodata import IsoData
+from .isodata import ratioproptorealprop, normalise_composition, ratio
 import numpy as np
 from scipy.optimize import fsolve 
 
@@ -130,34 +130,21 @@ def dsinversion(isodata, measured, spike=None, isoinv=None, standard=None):
     
     return out
 
-def normalise_composition(comp):
-    """Normalise rows of array to unit sum, i.e. rows are compositional vectors."""
-    return comp / comp.sum(axis=1)[:, np.newaxis]
-
-def ratioproptorealprop(lambda_, ratio_a, ratio_b): 
-    """Convert a proportion in ratio space to one per mole."""
-    a = 1 + sum(ratio_a)
-    b = 1 + sum(ratio_b)
-    return lambda_*a / (lambda_*a+ (1-lambda_)*b)
-
-def realproptoratioprop(prop, ratio_a, ratio_b): 
-    """Convert a proportion per mole into ratio space."""
-    a = 1 + sum(ratio_a)
-    b = 1 + sum(ratio_b)
-    return prop*b / (prop*b+ (1-prop)*a)
-
 def dscorrection(P, n, T, m, **kwargs): 
     """Routine for double spike fractionation correction using isotope ratios as inputs.
     
     Args:
-          P (array): log of ratio of atomic masses
-          n (array): isotope ratios of standard/ unspiked run
-          T (array): isotope ratios of spike
-          m (array): isotope ratios of measured
+        P (array): log of ratio of atomic masses
+        n (array): isotope ratios of standard/ unspiked run
+        T (array): isotope ratios of spike
+        m (array): isotope ratios of measured
+        **kwargs: additional arguments passed to fsolve
           
     Returns:
-        Spike ratio proportion (lambda), natural fractionation (alpha),
-        and instrumental fractionation (beta) as a vector z=(lambda, (1-lambda)*alpha, beta)
+        z (array): Spike ratio proportion (lambda),
+                   natural fractionation (alpha),
+                   and instrumental fractionation (beta)
+                   as a vector z=(lambda, (1-lambda)*alpha, beta)
     """
     # start by solving the linear problem
     b = np.transpose((m - n))
@@ -194,14 +181,8 @@ def J(y, P, n, T, m):
     Jac = np.array([dfdlambdaprime,dfdu,dfdbeta]).T
     return Jac
 
-
-def ratio(data, isoidx):
-    """Convert data to isotope ratios based on choice of isotopes. First index is the denominator index."""
-    di = isoidx[0]
-    ni = isoidx[1:]
-    return data[...,ni]/data[...,di,np.newaxis]
-
 if __name__=="__main__":
+    from .isodata import IsoData
     isodata_fe = IsoData('Fe')
     isodata_fe.set_spike([0.0, 0.0, 0.5, 0.5])
     measured = np.array([0.2658, 4.4861, 2.6302, 2.6180])

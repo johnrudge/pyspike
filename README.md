@@ -10,3 +10,11 @@ https://dx.doi.org/10.1016/j.chemgeo.2009.05.010
 and at:
 
 https://johnrudge.com/doublespike
+
+## Installation
+
+This is a standard python 3 package, which can be installed using pip:
+
+```
+pip install doublespike
+```

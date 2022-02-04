@@ -30,7 +30,7 @@ Functions:
                              proportions
 """
 
-__version__ = '0.1.3'
+__version__ = '0.9.0'
 __author__ = 'John F. Rudge'
 
 from .isodata import IsoData

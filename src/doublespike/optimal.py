@@ -91,7 +91,16 @@ def optimalspike(isodata,type_ = 'pure',isospike = None,isoinv = None,errorratio
     optspikeprops = []
     
     for i in range(len(isoinvvals)):
-        optspike,optprop,opterr,optspikeprop,optppmperamu = singleoptimalspike(isodata,type_,isospikevals[i,:],isoinvvals[i,:],errorratio,alpha,beta)
+        try:
+            optspike,optprop,opterr,optspikeprop,optppmperamu = singleoptimalspike(isodata,type_,isospikevals[i,:],isoinvvals[i,:],errorratio,alpha,beta)
+        except:
+            # try to fail gracefully
+            optspike = np.zeros(isodata.nisos())
+            optprop = 0.0
+            opterr = 1e32
+            optspikeprop = np.zeros(isodata.nisos())
+            optppmperamu = 1e32
+                
         optspikes.append(optspike)
         optprops.append(optprop)
         opterrs.append(opterr)

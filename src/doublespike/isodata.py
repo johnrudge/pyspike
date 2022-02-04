@@ -47,6 +47,8 @@ def loadrawdata(filename = None):
         rs = np.array(data[el]['rawspike'])
         rs = rs/rs.sum(axis=0)
         data[el]['rawspike'] = rs.T
+        if len(data[el]['rawspike'])==0:
+            data[el]['rawspike'] = None
     
     f.close()
     return data
@@ -144,7 +146,7 @@ class IsoData():
     
     def isoname(self):
         """Names of the isotopes."""
-        return [str(i) + self.element for i in self.isonum]
+        return [self.element + str(i) for i in self.isonum]
     
     def isolabel(self):
         """Isotope labels for plotting."""
@@ -164,7 +166,10 @@ class IsoData():
     
     def nrawspikes(self):
         """Number of single spikes available."""
-        return self.rawspike.shape[0]
+        if self.rawspike is None:
+            return 0
+        else:
+            return self.rawspike.shape[0]
     
     def set_errormodel(self, intensity = 10.0, deltat = 8.0, R = 1e11, T = 300.0, radiogenic = None, measured_type = 'fixed-total'): 
         """Set the error model used for error estimates and monte carlo runs.

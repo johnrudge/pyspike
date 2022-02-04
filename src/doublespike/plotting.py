@@ -198,10 +198,10 @@ def errorcurve2(isodata,type_ = 'pure',prop = 0.5,isospike = None, isoinv = None
         if hasattr(isodata, 'isoinv'):
             isoinv = isodata.isoinv
         else:
-            isoinv = isodata.isonum[0:4]
+            raise Exception('Inversion isotopes not set')
     
     if isospike is None:
-        isospike = np.array([1,2])
+        raise Exception('isospike not set')
     
     rawspike = isodata.rawspike
     # Convert isotope mass numbers to index numbers
@@ -211,11 +211,18 @@ def errorcurve2(isodata,type_ = 'pure',prop = 0.5,isospike = None, isoinv = None
     qvals = np.linspace(0.001,0.999,1000)
     errvals = np.zeros(len(qvals))
     ppmperamuvals = np.zeros(len(qvals))
+    
+    if type_ == "pure":
+        spikevector1 = np.zeros(isodata.nisos())
+        spikevector1[isospike[0]] = 1.0
+        spikevector2 = np.zeros(isodata.nisos())
+        spikevector2[isospike[1]] = 1.0
+    else:
+        spikevector1 = isodata.rawspike[isospike[0], :]
+        spikevector2 = isodata.rawspike[isospike[1], :]
+    
     for i in range(len(qvals)):
-        #spike = (np.multiply(qvals(i),rawspike(isospike(1),:))) + (np.multiply((1 - qvals(i)),rawspike(isospike(2),:)))
-        # ? real only?
-        # NEED TO FIX THIS BUG
-        spike = qvals[i] * rawspike[isospike[0],:] + (1-qvals[i]) * rawspike[isospike[1],:]
+        spike = qvals[i] * spikevector1 + (1-qvals[i]) * spikevector2
         errvals[i],ppmperamuvals[i] = errorestimate(isodata,prop,spike,isoinv,errorratio,alpha,beta)
     
     if plottype=='ppmperamu':

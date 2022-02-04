@@ -67,6 +67,8 @@ def optimalspike(isodata,type_ = 'pure',isospike = None,isoinv = None,errorratio
                 # look at all combinations of spikes from the inversion isotopes
                 isospikev = list(itertools.combinations(isoinv[i], 2))
             else:
+                if isodata.nrawspikes() == 0:
+                    return {} # can't proceed if no single spikes to use
                 # look at all combinations of spikes from the all rawspikes
                 isospikev = list(itertools.combinations(np.arange(isodata.nrawspikes()), 2))
         else:
@@ -151,7 +153,7 @@ def singleoptimalspike(isodata, type_ = 'pure',isospike = None,isoinv = None,err
     optspike = q * spikevector1 + (1 - q) * spikevector2
     opterr,optppmperamu = errorestimate(isodata,p,q*spikevector1 + (1 - q)*spikevector2,isoinv,errorratio,beta,alpha)
     
-    optspikeprop=np.zeros(isodata.nrawspikes())
+    optspikeprop=np.zeros_like(optspike)
     optspikeprop[isospike[0]]=q
     optspikeprop[isospike[1]]=1-q
     

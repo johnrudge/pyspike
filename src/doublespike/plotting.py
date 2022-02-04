@@ -134,6 +134,11 @@ def errorcurve(isodata,spike = None,isoinv = None,errorratio = None,alpha = 0.0,
             isoinv = isodata.isoinv
         else:
             isoinv = isodata.isonum[0:4]
+            
+    if spike is None:
+        if hasattr(isodata, 'spike'):
+            spike = isodata.spike
+            
     spike = np.array(spike)
     spike = spike / sum(spike)
     # Convert isotope mass numbers to index numbers

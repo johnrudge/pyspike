@@ -47,6 +47,11 @@ def optimalspike(isodata,type_ = 'pure',isospike = None,isoinv = None,errorratio
         >>> isodata_fe = IsoData('Fe')
         >>> optspike,optprop,opterr,optisoinv,optspikeprop,optppmperamu = optimalspike(isodata_fe,'pure')
     """
+    # Check if isoinv is set in isodata
+    if isoinv is None:
+        if hasattr(isodata, 'isoinv'):
+            isoinv = isodata.isoinv
+    
     # Convert isotope mass numbers to index numbers
     errorratio = isodata.isoindex(errorratio)
     isospike = isodata.isoindex(isospike)

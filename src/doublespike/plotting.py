@@ -159,7 +159,7 @@ def errorcurve(isodata,spike = None,isoinv = None,errorratio = None,alpha = 0.0,
     if errorratio is None:
         plt.ylabel(r'Error in $\alpha$ (1SD)')
     else:
-        plt.ylabel('Error in '+isodata.isolabel[errorratio[0]]+'/'+isolabel[errorratio[1]]+' (1SD)')
+        plt.ylabel('Error in '+isolabel[errorratio[0]]+'/'+isolabel[errorratio[1]]+' (1SD)')
     
     plt.title(isolabel[isoinv[0]]+', '+isolabel[isoinv[1]]+', '+isolabel[isoinv[2]]+', '+isolabel[isoinv[3]]+' inversion')
 

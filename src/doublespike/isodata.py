@@ -190,8 +190,8 @@ class IsoData():
             else:
                 radiogenic = False
         
-        a = 4 * k * T * R / deltat
-        b = elementarycharge * R / deltat
+        a = 4 * k * T * R / deltat   # equation (35)
+        b = elementarycharge * R / deltat  # equation (35)
         
         nisos = self.nisos()
         
@@ -303,13 +303,13 @@ def ratioproptorealprop(lambda_, ratio_a, ratio_b):
     """Convert a proportion in ratio space to one per mole."""
     a = 1 + sum(ratio_a)
     b = 1 + sum(ratio_b)
-    return lambda_*a / (lambda_*a+ (1-lambda_)*b)
+    return lambda_*a / (lambda_*a+ (1-lambda_)*b) # equation (9)
 
 def realproptoratioprop(prop, ratio_a, ratio_b): 
     """Convert a proportion per mole into ratio space."""
     a = 1 + sum(ratio_a)
     b = 1 + sum(ratio_b)
-    return prop*b / (prop*b+ (1-prop)*a) 
+    return prop*b / (prop*b+ (1-prop)*a) # equation (9)
 
 def ratio(data, isoidx):
     """Convert data to isotope ratios based on choice of isotopes. First index is the denominator index."""

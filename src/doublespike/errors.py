@@ -90,11 +90,11 @@ def errorestimate(isodata, prop = None, spike = None, isoinv = None, errorratio 
         error = np.sqrt(newVAN[erat,erat])
     
     if errorratio is None:
-        ppmperamu = (1000000.0 * error) / np.mean(isodata.mass)
+        ppmperamu = (1000000.0 * error) / np.mean(isodata.mass)  # equation (51)
     else:
         stdratio = isodata.standard[errorratio[0]] / isodata.standard[errorratio[1]]
         massdiff = np.abs(isodata.mass[errorratio[0]] - isodata.mass[errorratio[1]])
-        ppmperamu = (1000000.0 * error) / (stdratio * massdiff)
+        ppmperamu = (1000000.0 * error) / (stdratio * massdiff)  # equation (46)
     
     return error, ppmperamu 
 
@@ -122,7 +122,7 @@ def calcratiocov(composition = None, errormodel = None, di = None, isonorm = Non
     
 def calcbeamcov(meanbeams = None,errormodel = None): 
     """Calculate beam covariance matrix."""
-    beamvar = errormodel['a'] + errormodel['b']*meanbeams + errormodel['c']*(meanbeams ** 2)
+    beamvar = errormodel['a'] + errormodel['b']*meanbeams + errormodel['c']*(meanbeams ** 2)  # equation (34)
     return np.diag(beamvar)
     
 def covbeamtoratio(meanbeams = None,covbeams = None,di = None): 
@@ -138,7 +138,7 @@ def covbeamtoratio(meanbeams = None,covbeams = None,di = None):
     
     D = np.diag(1/d * np.ones(len(n)))
     S = - n / (d ** 2)
-    A = np.hstack((D, S[:,np.newaxis]))
+    A = np.hstack((D, S[:,np.newaxis]))  # equation (38)
     
     V = A @ M @ A.T
     return V
@@ -219,18 +219,18 @@ def z_sensitivity(z, P, n, T, m):
     dfdlambda = T - N*(1 + alpha*P)
     dfdu = -N*P
     dfdbeta = M*P
-    dfdy = np.array([dfdlambda,dfdu,dfdbeta]).T
-    dfdT = lambda_*np.eye(3)
-    dfdm = - np.diag(np.exp(- beta * P))
-    dfdn = (1 - lambda_) * np.diag(np.exp(- alpha * P))
+    dfdy = np.array([dfdlambda,dfdu,dfdbeta]).T   # equation (15)
+    dfdT = lambda_*np.eye(3)  # equation (20)
+    dfdm = - np.diag(np.exp(- beta * P))  # equation (20) 
+    dfdn = (1 - lambda_) * np.diag(np.exp(- alpha * P))  # equation (20)
     
-    ## matrix to convert from (lambda, (1-lambda)alpha,beta) to (lambda,alpha,beta)
+    ## matrix to convert from (lambda, (1-lambda)alpha,beta) to (lambda,alpha,beta), equation (22)
     K = np.array([[1,0,0],
                   [(alpha / (1 - lambda_)),(1 / (1 - lambda_)),0],
                   [0,0,1]])
-    dzdT = - K @ (np.linalg.solve(dfdy,dfdT))
-    dzdm = - K @ (np.linalg.solve(dfdy,dfdm))
-    dzdn = - K @ (np.linalg.solve(dfdy,dfdn))
+    dzdT = - K @ (np.linalg.solve(dfdy,dfdT))  # equation (19)
+    dzdm = - K @ (np.linalg.solve(dfdy,dfdm))  # equation (18)
+    dzdn = - K @ (np.linalg.solve(dfdy,dfdn))  # equation (17)
     
     return dzdn, dzdm, dzdT
 
@@ -280,9 +280,9 @@ def sensitivity(z, AP, An, AT, Am, invrat):
     
     NP = AN*AP
     NP = NP[:,np.newaxis]
-    dANdAT = - NP @ dalphadAT[np.newaxis,:]
-    dANdAn = np.diag(np.exp(- alpha*AP)) - NP @ dalphadAn[np.newaxis,:]
-    dANdAm = - NP @ dalphadAm[np.newaxis,:]
+    dANdAT = - NP @ dalphadAT[np.newaxis,:] # equation (26)
+    dANdAn = np.diag(np.exp(- alpha*AP)) - NP @ dalphadAn[np.newaxis,:]  # equation (24)
+    dANdAm = - NP @ dalphadAm[np.newaxis,:]  # equation (25)
     
     dbetadAT = dzdAT[2,:]
     dbetadAn = dzdAn[2,:]
@@ -290,9 +290,9 @@ def sensitivity(z, AP, An, AT, Am, invrat):
     
     MP = AM*AP
     MP = MP[:,np.newaxis]
-    dAMdAT = - MP @ dbetadAT[np.newaxis,:]
-    dAMdAn = - MP @ dbetadAn[np.newaxis,:]
-    dAMdAm = np.diag(np.exp(- beta*AP)) - MP @ dbetadAm[np.newaxis,:]
+    dAMdAT = - MP @ dbetadAT[np.newaxis,:]  # equation (33)
+    dAMdAn = - MP @ dbetadAn[np.newaxis,:]  # equation (31)
+    dAMdAm = np.diag(np.exp(- beta*AP)) - MP @ dbetadAm[np.newaxis,:]  # equation (32)
     
     return dzdAn, dzdAT, dzdAm, dANdAn, dANdAT, dANdAm, dAMdAn, dAMdAT, dAMdAm
     
@@ -304,7 +304,7 @@ def fcerrorpropagation(z,AP,An,AT,Am,VAn,VAT,VAm,invrat):
     
     dzdAn, dzdAT, dzdAm, dANdAn, dANdAT, dANdAm, dAMdAn, dAMdAT, dAMdAm = sensitivity(z, AP, An, AT, Am, invrat)
     
-    # Covariance matix for z=(lambda,beta,alpha), sample, mixture
+    # Covariance matix for z=(lambda,beta,alpha), sample, mixture. Equations (16), (23), (30)
     Vz = dzdAn @ VAn @ dzdAn.T + dzdAT @ VAT @ dzdAT.T + dzdAm @ VAm @ dzdAm.T 
     VAN = dANdAn @ VAn @ dANdAn.T + dANdAT @ VAT @ dANdAT.T + dANdAm @ VAm @ dANdAm.T
     VAM = dAMdAn @ VAn @ dAMdAn.T + dAMdAT @ VAT @ dAMdAT.T + dAMdAm @ VAm @ dAMdAm.T

@@ -169,7 +169,7 @@ def F_params(y, P, n, T, m):
 def F(y, P, n, T, m): 
     """The nonlinear equations to solve."""
     lambda_, alpha, beta, N, M = F_params(y, P, n, T, m)
-    fval = lambda_*T + (1-lambda_)*N - M
+    fval = lambda_*T + (1-lambda_)*N - M  # equation (10)
     return fval
 
 def J(y, P, n, T, m):
@@ -178,7 +178,7 @@ def J(y, P, n, T, m):
     dfdlambdaprime = T - N*(1 + alpha*P)
     dfdu = -N*P
     dfdbeta = M*P
-    Jac = np.array([dfdlambdaprime,dfdu,dfdbeta]).T
+    Jac = np.array([dfdlambdaprime,dfdu,dfdbeta]).T  # equation (15)
     return Jac
 
 if __name__=="__main__":

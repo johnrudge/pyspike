@@ -134,7 +134,7 @@ def covbeamtoratio(meanbeams = None,covbeams = None,di = None):
     n = meanbeams[ni]
     d = meanbeams[di]
     ii = np.concatenate((ni, np.array([di]))) # move denominator to end
-    M = covbeams[ii, :][:,ii]
+    M = covbeams[np.ix_(ii,ii)]
     
     D = np.diag(1/d * np.ones(len(n)))
     S = - n / (d ** 2)
@@ -152,16 +152,14 @@ def changedenomcov(data = None, datacov = None, olddi = None, newdi = None):
     newni = np.concatenate((np.arange(newdi),np.arange(newdi+1,nisos)))
     
     datacovplus = np.zeros((nisos,nisos))
-    #datacovplus[:,oldni][oldni,:] = datacov
-    # There must be a vectorized way of doing this!
-    for i,n in enumerate(oldni):
-        for j,m in enumerate(oldni):
-            datacovplus[n,m] = datacov[i,j]
+    datacovplus[np.ix_(oldni, oldni)] = datacov
 
     A = np.eye(nisos) / dataplus[newdi]
     A[:,newdi] = A[:,newdi] - dataplus / (dataplus[newdi] ** 2)
     newdatacovplus = A @ datacovplus @ A.T
-    newdatacov = newdatacovplus[:,newni][newni,:]
+    
+    newdatacov = newdatacovplus[np.ix_(newni,newni)]
+
     return newdatacov
 
 def ratiodata(isodata, di, prop, spike = None, alpha = 0.0, beta = 0.0):
@@ -300,9 +298,9 @@ def sensitivity(z, AP, An, AT, Am, invrat):
     
 def fcerrorpropagation(z,AP,An,AT,Am,VAn,VAT,VAm,invrat): 
     """Linear error propagation for the fractionation correction."""
-    Vn = VAn[invrat,:][:,invrat]
-    VT = VAT[invrat,:][:,invrat]
-    Vm = VAm[invrat,:][:,invrat]
+    Vn = VAn[np.ix_(invrat,invrat)]
+    VT = VAT[np.ix_(invrat,invrat)]
+    Vm = VAm[np.ix_(invrat,invrat)]
     
     dzdAn, dzdAT, dzdAm, dANdAn, dANdAT, dANdAm, dAMdAn, dAMdAT, dAMdAm = sensitivity(z, AP, An, AT, Am, invrat)
     

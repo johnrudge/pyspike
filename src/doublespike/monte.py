@@ -4,7 +4,7 @@ from numpy.random import default_rng
 from .isodata import IsoData
 from .inversion import dsinversion
     
-def monterun(isodata, prop = None, spike = None, alpha = 0.0, beta = 0.0, n = 1000): 
+def monterun(isodata, prop, spike = None, alpha = 0.0, beta = 0.0, n = 1000): 
     """Generate a fake mass spectrometer run by Monte-Carlo simulation.
     
     Args:

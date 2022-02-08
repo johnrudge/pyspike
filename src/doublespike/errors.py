@@ -3,7 +3,7 @@
 import numpy as np
 from .isodata import realproptoratioprop, ratio
 
-def errorestimate(isodata, prop = None, spike = None, isoinv = None, errorratio = None, alpha = 0.0, beta = 0.0): 
+def errorestimate(isodata, prop, spike = None, isoinv = None, errorratio = None, alpha = 0.0, beta = 0.0): 
     """Calculate the error in the natural fractionation factor or a chosen ratio by linear error propagation.
 
     Args:
@@ -40,7 +40,7 @@ def errorestimate(isodata, prop = None, spike = None, isoinv = None, errorratio 
             spike = isodata.spike
 
     if isoinv is None:
-        if hasattr(isodata, 'isoinv'):
+        if isodata.isoinv is not None:
             isoinv = isodata.isoinv
         else:
             raise Exception('No inversion isotopes set')

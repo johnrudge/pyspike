@@ -42,7 +42,7 @@ def errorcurve2d(isodata, type_ = 'pure', isospike = None, isoinv = None, errorr
     
     # Get data from isodata if not supplied as arguments
     if isoinv is None:
-        if hasattr(isodata, 'isoinv'):
+        if isodata.isoinv is not None:
             isoinv = isodata.isoinv
         else:
             raise Exception('Inversion isotopes not set')
@@ -137,13 +137,13 @@ def errorcurve(isodata,spike = None,isoinv = None,errorratio = None,alpha = 0.0,
 
     # Get data from isodata if not supplied as arguments
     if isoinv is None:
-        if hasattr(isodata, 'isoinv'):
+        if isodata.isoinv is not None:
             isoinv = isodata.isoinv
         else:
             raise Exception('Inversion isotopes not set')
             
     if spike is None:
-        if hasattr(isodata, 'spike'):
+        if isodata.spike is not None:
             spike = isodata.spike
         else:
             raise Exception('Spike not set')
@@ -177,7 +177,7 @@ def errorcurve(isodata,spike = None,isoinv = None,errorratio = None,alpha = 0.0,
     
     ax.set_title(isolabel[isoinv[0]]+', '+isolabel[isoinv[1]]+', '+isolabel[isoinv[2]]+', '+isolabel[isoinv[3]]+' inversion')
 
-def errorcurve2(isodata,type_ = 'pure',prop = 0.5,isospike = None, isoinv = None,errorratio = None,alpha = 0.0,beta = 0.0,plottype = 'default',scale = 1.0,ax=None,**kwargs): 
+def errorcurve2(isodata,type_ = 'pure',prop=0.5,isospike = None, isoinv = None,errorratio = None,alpha = 0.0,beta = 0.0,plottype = 'default',scale = 1.0,ax=None,**kwargs): 
     """Plot of error as a function of double spike proportions for a given double spike-sample proportion.
     
     Args:
@@ -213,7 +213,7 @@ def errorcurve2(isodata,type_ = 'pure',prop = 0.5,isospike = None, isoinv = None
     
     # Get data from isodata if not supplied as arguments
     if isoinv is None:
-        if hasattr(isodata, 'isoinv'):
+        if isodata.isoinv is not None:
             isoinv = isodata.isoinv
         else:
             raise Exception('Inversion isotopes not set')
@@ -301,7 +301,7 @@ def errorcurveoptimalspike(isodata,type_ = 'pure',isospike = None,isoinv = None,
         ax = plt.gca()
 
     if isoinv is None:
-        if hasattr(isodata, 'isoinv'):
+        if isodata.isoinv is not None:
             isoinv = isodata.isoinv
         else:
             raise Exception('Inversion isotopes not set')

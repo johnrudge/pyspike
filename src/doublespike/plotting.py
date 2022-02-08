@@ -102,7 +102,7 @@ def errorcurve2d(isodata, type_ = 'pure', isospike = None, isoinv = None, errorr
     
     ax.plot(os['optprop'][0],os['optspikeprop'][0,isospike[0]],'rx')
 
-def errorcurve(isodata,spike = None,isoinv = None,errorratio = None,alpha = 0.0,beta = 0.0,plottype = 'default',ax = None,**kwargs): 
+def errorcurve(isodata,spike = None,isoinv = None,errorratio = None,alpha = 0.0,beta = 0.0,plottype = 'default',scale=1.0,ax = None,**kwargs): 
     """Plot of error as a function of double spike-sample proportions for a given double spike composition.
     
     Args:
@@ -161,8 +161,8 @@ def errorcurve(isodata,spike = None,isoinv = None,errorratio = None,alpha = 0.0,
     else:
         plotvals = errvals
     
-    ax.plot(pvals,plotvals,**kwargs)
-    mine = np.amin(plotvals)
+    ax.plot(pvals,scale*plotvals,**kwargs)
+    mine = np.amin(scale*plotvals)
     ax.set_xlim(np.array([0,1]))
     ax.set_ylim(np.array([0,5 * mine]))
     ax.set_xlabel('proportion of double spike in double spike-sample mix')
@@ -174,7 +174,7 @@ def errorcurve(isodata,spike = None,isoinv = None,errorratio = None,alpha = 0.0,
     
     ax.set_title(isolabel[isoinv[0]]+', '+isolabel[isoinv[1]]+', '+isolabel[isoinv[2]]+', '+isolabel[isoinv[3]]+' inversion')
 
-def errorcurve2(isodata,type_ = 'pure',prop = 0.5,isospike = None, isoinv = None,errorratio = None,alpha = 0.0,beta = 0.0,plottype = 'default',ax=None,**kwargs): 
+def errorcurve2(isodata,type_ = 'pure',prop = 0.5,isospike = None, isoinv = None,errorratio = None,alpha = 0.0,beta = 0.0,plottype = 'default',scale = 1.0,ax=None,**kwargs): 
     """Plot of error as a function of double spike proportions for a given double spike-sample proportion.
     
     Args:
@@ -244,8 +244,8 @@ def errorcurve2(isodata,type_ = 'pure',prop = 0.5,isospike = None, isoinv = None
         plotvals = errvals
     
     isolabel = isodata.isolabel()
-    ax.plot(qvals,plotvals,**kwargs)
-    mine = np.amin(plotvals)
+    ax.plot(qvals,scale*plotvals,**kwargs)
+    mine = np.amin(scale*plotvals)
     ax.set_xlim(np.array([0,1]))
     ax.set_ylim(np.array([0,5 * mine]))
     if type_ == 'pure':
@@ -260,7 +260,7 @@ def errorcurve2(isodata,type_ = 'pure',prop = 0.5,isospike = None, isoinv = None
     
     ax.set_title(isolabel[isoinv[0]]+', '+isolabel[isoinv[1]]+', '+isolabel[isoinv[2]]+', '+isolabel[isoinv[3]]+' inversion')
 
-def errorcurveoptimalspike(isodata,type_ = 'pure',isospike = None,isoinv = None,errorratio = None,alpha = 0.0,beta = 0.0,plottype = 'default',ax=None,**kwargs): 
+def errorcurveoptimalspike(isodata,type_ = 'pure',isospike = None,isoinv = None,errorratio = None,alpha = 0.0,beta = 0.0,plottype = 'default',scale =1.0, ax=None,**kwargs): 
     """Find the optimal double spike compositions and plot the corresponding error curves.
     
     Args:
@@ -314,7 +314,7 @@ def errorcurveoptimalspike(isodata,type_ = 'pure',isospike = None,isoinv = None,
         else:
             spiked = np.where(os['optspikeprop'][j,:] > 0)[0]
             leglabel =rawspikelabel[spiked[0]]+'-'+rawspikelabel[spiked[1]]
-        errorcurve(isodata,os['optspike'][j,:],isoinv,errorratio,alpha,beta,plottype,label=leglabel,ax=ax)
+        errorcurve(isodata,os['optspike'][j,:],isoinv,errorratio,alpha,beta,plottype,label=leglabel,scale=scale,ax=ax)
         
     if plottype=='ppmperamu':
         ax.set_ylim(np.array([0,5 * np.amin(os['optppmperamu'])]))

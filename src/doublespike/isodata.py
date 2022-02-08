@@ -103,25 +103,35 @@ class IsoData():
         return txt
     
     def set_element(self, element):
+        """Set string labelling element."""
         self.element = element
         
     def set_mass(self, mass):
+        """Set atomic masses."""
         self.mass = np.array(mass)
     
     def set_isonum(self, isonum):
+        """Set isotope numbers."""
         self.isonum = np.array(isonum, dtype=int)
         
     def set_isoinv(self, isoinv):
+        """Set inversion isotopes."""
         self.isoinv = np.array(isoinv, dtype=int)
     
     def set_standard(self, standard):
-        self.standard = np.array(standard)
+        """Set composition of standard."""
+        std = np.array(standard)
+        self.standard = std/sum(std)
 
     def set_spike(self, spike):
-        self.spike = np.array(spike)
+        """Set composition of double spike."""
+        spk = np.array(spike)
+        self.spike = spk/sum(spk)
     
     def set_rawspike(self, rawspike):
-        self.rawspike = np.array(rawspike)
+        """Set compositions of single spikes."""
+        rs = np.array(rawspike)
+        self.rawspike = rs/rs.sum(axis=0)
     
     def isoindex(self, ix):
         """Give the data index corresponding to a given isotope number e.g. 56->1."""

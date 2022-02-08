@@ -28,6 +28,7 @@ def errorcurve2d(isodata, type_ = 'pure', isospike = None, isoinv = None, errorr
         ncontour (int): number of countours. Default is 25.
         plottype (str): by default, the error is plotted. By setting this to 'ppmperamu'
             an estimate of the ppm per amu is plotted instead.
+        ax: matplotlib axes handle.
         **kwargs: additional keyword arguments are passed to contour command.
     
     Example:
@@ -121,6 +122,8 @@ def errorcurve(isodata,spike = None,isoinv = None,errorratio = None,alpha = 0.0,
             is slight unless the fractionations are very large.
         plottype (str): by default, the error is plotted. By setting this to 'ppmperamu'
             an estimate of the ppm per amu is plotted instead.
+        scale (float): numerical factor to multiply all errors by, useful for changing units.
+        ax: matplotlib axes handle.
         **kwargs -- additional keyword arguments are passed to the plot command.
     
     Example:
@@ -195,6 +198,8 @@ def errorcurve2(isodata,type_ = 'pure',prop = 0.5,isospike = None, isoinv = None
             is slight unless the fractionations are very large. 
         plottype (str): by default, the error is plotted. By setting this to 'ppmperamu'
             an estimate of the ppm per amu is plotted instead.
+        scale (float): numerical factor to multiply all errors by, useful for changing units.
+        ax: matplotlib axes handle.
         **kwargs -- additional arguments are passed to the plot command.
     
     Example:
@@ -283,6 +288,8 @@ def errorcurveoptimalspike(isodata,type_ = 'pure',isospike = None,isoinv = None,
             is slight unless the fractionations are very large.
         plottype (str): by default, the error is plotted. By setting this to 'ppmperamu'
             an estimate of the ppm per amu is plotted instead.
+        scale (float): numerical factor to multiply all errors by, useful for changing units.
+        ax: matplotlib axes handle.
         **kwargs: additional arguments are passed to the plot command
     
     Example:

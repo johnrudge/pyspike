@@ -98,7 +98,7 @@ def errorestimate(isodata, prop, spike = None, isoinv = None, errorratio = None,
     
     return error, ppmperamu 
 
-def calcratiocov(composition = None, errormodel = None, di = None, isonorm = None, prop = 0.0): 
+def calcratiocov(composition, errormodel, di, isonorm = None, prop = 0.0): 
     """Calculate the covariance matrix of the ratios based on the given error model and composition."""
     # di is the isotope with which to denominator
     # isonorm are the isotopes to use in the normalisation
@@ -120,12 +120,12 @@ def calcratiocov(composition = None, errormodel = None, di = None, isonorm = Non
     V = covbeamtoratio(meanbeams,covbeams,di)
     return V
     
-def calcbeamcov(meanbeams = None,errormodel = None): 
+def calcbeamcov(meanbeams, errormodel): 
     """Calculate beam covariance matrix."""
     beamvar = errormodel['a'] + errormodel['b']*meanbeams + errormodel['c']*(meanbeams ** 2)  # equation (34)
     return np.diag(beamvar)
     
-def covbeamtoratio(meanbeams = None,covbeams = None,di = None): 
+def covbeamtoratio(meanbeams, covbeams, di): 
     """Convert a covariance matrix for beams to one for ratios."""
     # di is the isotope to denominator with
     # assumes last row and column of M correspond to denominator
@@ -143,7 +143,7 @@ def covbeamtoratio(meanbeams = None,covbeams = None,di = None):
     V = A @ M @ A.T
     return V
 
-def changedenomcov(data = None, datacov = None, olddi = None, newdi = None): 
+def changedenomcov(data, datacov, olddi, newdi): 
     """Change denominator of covariance matrix for given set of ratios."""
     nisos = len(data) + 1
     oldni = np.concatenate((np.arange(olddi),np.arange(olddi+1,nisos)))

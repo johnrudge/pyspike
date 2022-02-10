@@ -200,8 +200,8 @@ class IsoData():
             else:
                 radiogenic = False
         
-        a = 4 * k * T * R / deltat   # equation (35)
-        b = elementarycharge * R / deltat  # equation (35)
+        a = 4 * k * T * R / deltat   # equation (35), Johnson–Nyquist noise
+        b = elementarycharge * R / deltat  # equation (35), counting statistics
         
         nisos = self.nisos()
         

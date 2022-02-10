@@ -3,7 +3,7 @@
 import numpy as np
 import itertools
 from scipy.special import binom
-from scipy.optimize import minimize, LinearConstraint
+from scipy.optimize import minimize
 from scipy.special import expit, logit
 from .errors import errorestimate
 

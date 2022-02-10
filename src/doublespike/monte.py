@@ -1,7 +1,7 @@
 """Routines for Monte Carlo mass spec simulation."""
 import numpy as np
 from numpy.random import default_rng
-from .isodata import IsoData
+from .isodata import IsoData, normalise_composition
 from .inversion import dsinversion
     
 def monterun(isodata, prop, spike = None, alpha = 0.0, beta = 0.0, n = 1000): 
@@ -55,7 +55,6 @@ def monterun(isodata, prop, spike = None, alpha = 0.0, beta = 0.0, n = 1000):
     standard = standard[np.newaxis,:]
     spike = spike[np.newaxis,:]
     
-    
     sample = standard * np.exp( - P * alpha)
     sample = normalise_composition(sample)
     
@@ -64,31 +63,20 @@ def monterun(isodata, prop, spike = None, alpha = 0.0, beta = 0.0, n = 1000):
     measured = mixture * np.exp( + P*beta)
     measured = normalise_composition(measured)
     
-    def calc_var(data, emod):
-        datai = data *  emod['intensity']    
-        if emod['type'] == 'fixed-sample':
-            datai = datai / (1.0 - prop)
-        dataivar = emod['a'] + emod['b'] * datai + emod['c'] * (datai **2)
-        return datai, dataivar
+    # Always perform Monte Carlo simulation for the spike-sample mix
+    measuredv = monte_single(measured, emodel['measured'])
     
-    measuredi, measuredivar = calc_var(measured, emodel['measured'])
-    standardi, standardivar = calc_var(standard, emodel['standard'])
-    spikei, spikeivar = calc_var(spike, emodel['spike'])
-
-    rng = default_rng()
-    measuredv = rng.normal(loc = measuredi, scale = np.sqrt(measuredivar))
+    # If errormodel has variance on standard, do Monte Carlo simulation for it
     standardv = None
-    spikev = None
-
+    standardi, standardivar = calc_var(standard, emodel['standard'])
     if np.any(standardivar>0.0):
-        standardi = np.tile(standardi, (n,1))
-        standardivar = np.tile(standardivar, (n,1))
-        standardv = rng.normal(loc = standardi, scale = np.sqrt(standardivar))
+        standardv = monte_single(standard, emodel['standard'],n)
 
+    # If errormodel has variance on spike, do Monte Carlo simulation for it
+    spikev = None
+    spikei, spikeivar = calc_var(spike, emodel['spike'])
     if np.any(spikeivar>0.0):
-        spikei = np.tile(spikei, (n,1))
-        spikeivar = np.tile(spikeivar, (n,1))
-        spikev = rng.normal(loc = spikei, scale = np.sqrt(spikeivar))
+        spikev = monte_single(spike, emodel['spike'],n)
     
     if standardv is None and spikev is None:
         return measuredv
@@ -97,11 +85,26 @@ def monterun(isodata, prop, spike = None, alpha = 0.0, beta = 0.0, n = 1000):
     else:
         return measuredv, standardv, spikev
 
+def calc_var(data, emod):
+    """Calculate the beam variances."""
+    datai = data *  emod['intensity']    
+    if emod['type'] == 'fixed-sample':
+        datai = datai / (1.0 - prop)
+    dataivar = emod['a'] + emod['b'] * datai + emod['c'] * (datai **2)  # equation (34)
+    return datai, dataivar
+
+def monte_single(composition, emod, n = None):
+    """Peform Monte-Carlo simulation for a given composition and error model."""
+    rng = default_rng()
+    if n is not None:
+        composition = np.tile(composition, (n,1))
+    composition = normalise_composition(composition)
     
-def normalise_composition(comp):
-    """Normalise an array so rows have unit sum, i.e. rows are compositional vectors."""
-    return comp / comp.sum(axis=1)[:, np.newaxis]    
+    datai, dataivar = calc_var(composition, emod)
     
+    datav = rng.normal(loc = datai, scale = np.sqrt(dataivar))
+    return datav
+     
 if __name__=="__main__":
     idat = IsoData('Fe')
     idat.set_spike([0.0, 0.0, 0.5, 0.5])

@@ -40,3 +40,4 @@ from .cocktail import cocktail
 from .errors import errorestimate, ratiodata, sensitivity
 from .optimal import optimalspike
 from .plotting import errorcurve, errorcurve2, errorcurve2d, errorcurveoptimalspike
+from .calibrate import spike_calibration

@@ -40,10 +40,10 @@ def dsinversion(isodata, measured, spike=None, isoinv=None, standard=None):
         else:
             spike = isodata.spike
     if isoinv is None:
-        if hasattr(isodata, 'isoinv'):
-            isoinv = isodata.isoinv
-        else:
+        if isodata.isoinv is None:
             raise Exception("Inversion isotopes not specified.")
+        else:
+            isoinv = isodata.isoinv
     if standard is None:
         standard = isodata.standard
 
@@ -150,6 +150,25 @@ def dscorrection(P, n, T, m, **kwargs):
     b = np.transpose((m - n))
     A = np.array([np.transpose((T - n)),np.transpose((np.multiply(- n,P))),np.transpose((np.multiply(m,P)))])
     y0 = np.linalg.solve(A,b)
+    
+    # match up linear exponents with exponential ones
+    lambda_lin = y0[0]
+    alpha_lin = y0[1]/(1-lambda_lin)
+    beta_lin = y0[2]
+
+    # linear approximations are awful if |alpha|>|1/P|, cap if getting alpha this large
+    alpha_max = 1.0/max(abs(P));
+    alpha_min = -1.0/max(abs(P));
+
+    y1 = np.array([0.5, 0.0, 0.0])  # alternate starting guess if linear approximation goes way out
+    if alpha_lin>alpha_max:
+        y0 = y1
+    if alpha_lin<alpha_min:
+        y0 = y1
+    if beta_lin>alpha_max:
+        y0 = y1
+    if beta_lin<alpha_min:
+        y0 = y1
     
     # by starting at the linear solution, solve the non-linear problem    
     y = fsolve(F, y0, args=(P,n,T,m), fprime=J, **kwargs)

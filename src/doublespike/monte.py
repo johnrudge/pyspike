@@ -68,7 +68,7 @@ def monterun(isodata, prop, spike = None, alpha = 0.0, beta = 0.0, n = 1000):
     
     # If errormodel has variance on standard, do Monte Carlo simulation for it
     standardv = None
-    standardi, standardivar = calc_var(standard, emodel['standard'])
+    standardi, standardivar = calc_var(standard, emodel['standard'], prop)
     if np.any(standardivar>0.0):
         standardv = monte_single(standard, emodel['standard'],n)
 
@@ -85,7 +85,7 @@ def monterun(isodata, prop, spike = None, alpha = 0.0, beta = 0.0, n = 1000):
     else:
         return measuredv, standardv, spikev
 
-def calc_var(data, emod):
+def calc_var(data, emod, prop = None):
     """Calculate the beam variances."""
     datai = data *  emod['intensity']    
     if emod['type'] == 'fixed-sample':

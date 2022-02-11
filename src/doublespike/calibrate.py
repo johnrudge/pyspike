@@ -80,7 +80,6 @@ def spike_calibration(isodata, spike_measurement, mixture_measurement, isoinv = 
     if len(unused)>0:
         expected_spike = spike_measurement*np.exp(-np.log(isodata.mass)*betat)
         expected_spike = normalise_composition(expected_spike)
-        print("expected spike", expected_spike)
         expected_unused = expected_spike[unused]/expected_spike[deno]
         calibrated_spike[unused] = expected_unused
     

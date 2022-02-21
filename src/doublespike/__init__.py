@@ -37,8 +37,8 @@ Classes:
     IsoData                - Object for storing data on individual isotope systems
 """
 
-__version__ = '0.9.3'
-__author__ = 'John F. Rudge'
+__version__ = "0.9.3"
+__author__ = "John F. Rudge"
 
 from .isodata import IsoData
 from .inversion import dsinversion

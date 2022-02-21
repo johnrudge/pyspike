@@ -3,10 +3,25 @@ import numpy as np
 import matplotlib.pyplot as plt
 from .errors import errorestimate
 from .optimal import optimalspike
-    
-def errorcurve2d(isodata, type_ = 'pure', isospike = None, isoinv = None, errorratio = None, alpha = 0.0, beta = 0.0, resolution = 100,threshold = 0.25,ncontour = 25,plottype = 'default', ax = None, **kwargs): 
+
+
+def errorcurve2d(
+    isodata,
+    type_="pure",
+    isospike=None,
+    isoinv=None,
+    errorratio=None,
+    alpha=0.0,
+    beta=0.0,
+    resolution=100,
+    threshold=0.25,
+    ncontour=25,
+    plottype="default",
+    ax=None,
+    **kwargs
+):
     """2D contour plot of error as a function of double spike composition and double spike-sample proportions.
-    
+
     Args:
         isodata: object of class IsoData, e.g. IsoData('Fe')
         type (str): type of spike, 'pure' or 'real'. Real spikes, such as those from
@@ -30,82 +45,147 @@ def errorcurve2d(isodata, type_ = 'pure', isospike = None, isoinv = None, errorr
             an estimate of the ppm per amu is plotted instead.
         ax: matplotlib axes handle.
         **kwargs: additional keyword arguments are passed to contour command.
-    
+
     Example:
         >>> isodata_fe = IsoData('Fe')
         >>> errorcurve2d(isodata_fe,'pure',[57, 58])
-        
+
     See also errorestimate
     """
     if ax is None:
         ax = plt.gca()
-    
+
     # Get data from isodata if not supplied as arguments
     if isoinv is None:
         if isodata.isoinv is not None:
             isoinv = isodata.isoinv
         else:
-            raise Exception('Inversion isotopes not set')
+            raise Exception("Inversion isotopes not set")
 
     if isospike is None:
-        raise Exception('isospike not set')
-    
+        raise Exception("isospike not set")
+
     # Ensure working with numpy arrays
     isoinv = np.array(isoinv)
     isospike = np.array(isospike)
-    
+
     # Convert isotope mass numbers to index numbers
     errorratio = isodata.isoindex(errorratio)
     isoinv = isodata.isoindex(isoinv)
     isospike = isodata.isoindex(isospike)
 
-    if type_ == 'pure':
+    if type_ == "pure":
         spike1 = np.zeros(isodata.nisos())
         spike2 = np.zeros(isodata.nisos())
         spike1[isospike[0]] = 1
         spike2[isospike[1]] = 1
     else:
-        spike1 = isodata.rawspike[isospike[0],:]
-        spike2 = isodata.rawspike[isospike[1],:]
-    
-    prop = np.linspace(0.001,0.999,resolution)
-    spikeprop = np.linspace(0.001,0.999,resolution)
-    iv,jv = np.meshgrid(np.arange(len(prop)),np.arange(len(spikeprop)))
-    
-    def fun(i,j):
-        return errorestimate(isodata,prop[i],spikeprop[j]*spike1 + (1 - spikeprop[j])*spike2,isoinv,errorratio,alpha,beta)
+        spike1 = isodata.rawspike[isospike[0], :]
+        spike2 = isodata.rawspike[isospike[1], :]
+
+    prop = np.linspace(0.001, 0.999, resolution)
+    spikeprop = np.linspace(0.001, 0.999, resolution)
+    iv, jv = np.meshgrid(np.arange(len(prop)), np.arange(len(spikeprop)))
+
+    def fun(i, j):
+        return errorestimate(
+            isodata,
+            prop[i],
+            spikeprop[j] * spike1 + (1 - spikeprop[j]) * spike2,
+            isoinv,
+            errorratio,
+            alpha,
+            beta,
+        )
+
     vfun = np.vectorize(fun)
-    errvals,ppmperamuvals = vfun(iv, jv)
-    
-    os = optimalspike(isodata,type_,isospike,isoinv,errorratio,alpha,beta)
-    
-    if plottype == 'ppmperamu':
-        C = ax.contour(prop,spikeprop,ppmperamuvals,np.linspace(os['optppmperamu'],(1 + threshold) * os['optppmperamu'],ncontour + 1),**kwargs)
+    errvals, ppmperamuvals = vfun(iv, jv)
+
+    os = optimalspike(isodata, type_, isospike, isoinv, errorratio, alpha, beta)
+
+    if plottype == "ppmperamu":
+        C = ax.contour(
+            prop,
+            spikeprop,
+            ppmperamuvals,
+            np.linspace(
+                os["optppmperamu"], (1 + threshold) * os["optppmperamu"], ncontour + 1
+            ),
+            **kwargs
+        )
     else:
-        C = ax.contour(prop,spikeprop,errvals,np.linspace(os['opterr'][0],(1 + threshold) * os['opterr'][0],ncontour + 1),**kwargs)
-    
-    ax.set_xlim(np.array([0,1]))
-    ax.set_ylim(np.array([0,1]))
-    ax.set_xlabel('proportion of double spike in double spike-sample mix')
-    
+        C = ax.contour(
+            prop,
+            spikeprop,
+            errvals,
+            np.linspace(
+                os["opterr"][0], (1 + threshold) * os["opterr"][0], ncontour + 1
+            ),
+            **kwargs
+        )
+
+    ax.set_xlim(np.array([0, 1]))
+    ax.set_ylim(np.array([0, 1]))
+    ax.set_xlabel("proportion of double spike in double spike-sample mix")
+
     isolabel = isodata.isolabel()
-    if type_ == 'pure':
-        ax.set_ylabel('proportion of '+isolabel[isospike[0]]+' in '+isolabel[isospike[0]]+'-'+isolabel[isospike[1]]+' double spike')
+    if type_ == "pure":
+        ax.set_ylabel(
+            "proportion of "
+            + isolabel[isospike[0]]
+            + " in "
+            + isolabel[isospike[0]]
+            + "-"
+            + isolabel[isospike[1]]
+            + " double spike"
+        )
     else:
         rawspikelabel = isodata.rawspikelabel()
-        ax.set_ylabel('proportion of '+rawspikelabel[isospike[0]]+' in '+rawspikelabel[isospike[0]]+'-'+rawspikelabel[isospike[1]]+' double spike')
+        ax.set_ylabel(
+            "proportion of "
+            + rawspikelabel[isospike[0]]
+            + " in "
+            + rawspikelabel[isospike[0]]
+            + "-"
+            + rawspikelabel[isospike[1]]
+            + " double spike"
+        )
     isoinv = isodata.isoindex(isoinv)
-    invisostring = isolabel[isoinv[0]]+', '+isolabel[isoinv[1]]+', '+isolabel[isoinv[2]]+', '+isolabel[isoinv[3]]+' inversion'
+    invisostring = (
+        isolabel[isoinv[0]]
+        + ", "
+        + isolabel[isoinv[1]]
+        + ", "
+        + isolabel[isoinv[2]]
+        + ", "
+        + isolabel[isoinv[3]]
+        + " inversion"
+    )
     if errorratio is None:
-        ax.set_title(r'Error in $\alpha$ (1SD) with '+invisostring)
+        ax.set_title(r"Error in $\alpha$ (1SD) with " + invisostring)
     else:
-        ax.set_title('Error in '+isolabel[errorratio[0]]+'/',isolabel[errorratio[1]]+' (1SD) with '+invisostring)
-    
-    ax.plot(os['optprop'][0],os['optspikeprop'][0,isospike[0]],'rx')
+        ax.set_title(
+            "Error in " + isolabel[errorratio[0]] + "/",
+            isolabel[errorratio[1]] + " (1SD) with " + invisostring,
+        )
 
-def errorcurve(isodata,spike = None,isoinv = None,errorratio = None,alpha = 0.0,beta = 0.0,plottype = 'default',scale=1.0,ax = None,**kwargs): 
+    ax.plot(os["optprop"][0], os["optspikeprop"][0, isospike[0]], "rx")
+
+
+def errorcurve(
+    isodata,
+    spike=None,
+    isoinv=None,
+    errorratio=None,
+    alpha=0.0,
+    beta=0.0,
+    plottype="default",
+    scale=1.0,
+    ax=None,
+    **kwargs
+):
     """Plot of error as a function of double spike-sample proportions for a given double spike composition.
-    
+
     Args:
         isodata: object of class IsoData, e.g. IsoData('Fe')
         spike (array): the composition of the double spike as a composition vector e.g. [0, 0, 0.5, 0.5]
@@ -125,11 +205,11 @@ def errorcurve(isodata,spike = None,isoinv = None,errorratio = None,alpha = 0.0,
         scale (float): numerical factor to multiply all errors by, useful for changing units.
         ax: matplotlib axes handle.
         **kwargs -- additional keyword arguments are passed to the plot command.
-    
+
     Example:
         >>> isodata_fe = IsoData('Fe')
         >>> errorcurve(isodata_fe,[0, 0, 0.5, 0.5])
-    
+
     See also errorestimate, errorcurve2
     """
     if ax is None:
@@ -140,46 +220,77 @@ def errorcurve(isodata,spike = None,isoinv = None,errorratio = None,alpha = 0.0,
         if isodata.isoinv is not None:
             isoinv = isodata.isoinv
         else:
-            raise Exception('Inversion isotopes not set')
-            
+            raise Exception("Inversion isotopes not set")
+
     if spike is None:
         if isodata.spike is not None:
             spike = isodata.spike
         else:
-            raise Exception('Spike not set')
-            
+            raise Exception("Spike not set")
+
     spike = np.array(spike)
     spike = spike / sum(spike)
     # Convert isotope mass numbers to index numbers
     errorratio = isodata.isoindex(errorratio)
     isoinv = isodata.isoindex(isoinv)
-    pvals = np.linspace(0.001,0.999,1000)
+    pvals = np.linspace(0.001, 0.999, 1000)
     errvals = np.zeros(len(pvals))
     ppmperamuvals = np.zeros(len(pvals))
     for i in range(len(pvals)):
-        errvals[i],ppmperamuvals[i] = errorestimate(isodata,pvals[i],spike,isoinv,errorratio,alpha,beta)
-    
-    if plottype=='ppmperamu':
+        errvals[i], ppmperamuvals[i] = errorestimate(
+            isodata, pvals[i], spike, isoinv, errorratio, alpha, beta
+        )
+
+    if plottype == "ppmperamu":
         plotvals = ppmperamuvals
     else:
         plotvals = errvals
-    
-    ax.plot(pvals,scale*plotvals,**kwargs)
-    mine = np.amin(scale*plotvals)
-    ax.set_xlim(np.array([0,1]))
-    ax.set_ylim(np.array([0,5 * mine]))
-    ax.set_xlabel('proportion of double spike in double spike-sample mix')
+
+    ax.plot(pvals, scale * plotvals, **kwargs)
+    mine = np.amin(scale * plotvals)
+    ax.set_xlim(np.array([0, 1]))
+    ax.set_ylim(np.array([0, 5 * mine]))
+    ax.set_xlabel("proportion of double spike in double spike-sample mix")
     isolabel = isodata.isolabel()
     if errorratio is None:
-        ax.set_ylabel(r'Error in $\alpha$ (1SD)')
+        ax.set_ylabel(r"Error in $\alpha$ (1SD)")
     else:
-        ax.set_ylabel('Error in '+isolabel[errorratio[0]]+'/'+isolabel[errorratio[1]]+' (1SD)')
-    
-    ax.set_title(isolabel[isoinv[0]]+', '+isolabel[isoinv[1]]+', '+isolabel[isoinv[2]]+', '+isolabel[isoinv[3]]+' inversion')
+        ax.set_ylabel(
+            "Error in "
+            + isolabel[errorratio[0]]
+            + "/"
+            + isolabel[errorratio[1]]
+            + " (1SD)"
+        )
 
-def errorcurve2(isodata,type_ = 'pure',prop=0.5,isospike = None, isoinv = None,errorratio = None,alpha = 0.0,beta = 0.0,plottype = 'default',scale = 1.0,ax=None,**kwargs): 
+    ax.set_title(
+        isolabel[isoinv[0]]
+        + ", "
+        + isolabel[isoinv[1]]
+        + ", "
+        + isolabel[isoinv[2]]
+        + ", "
+        + isolabel[isoinv[3]]
+        + " inversion"
+    )
+
+
+def errorcurve2(
+    isodata,
+    type_="pure",
+    prop=0.5,
+    isospike=None,
+    isoinv=None,
+    errorratio=None,
+    alpha=0.0,
+    beta=0.0,
+    plottype="default",
+    scale=1.0,
+    ax=None,
+    **kwargs
+):
     """Plot of error as a function of double spike proportions for a given double spike-sample proportion.
-    
+
     Args:
         isodata: object of class IsoData, e.g. IsoData('Fe')
         type (str): type of spike, 'pure' or 'real'. Real spikes, such as those from
@@ -195,41 +306,41 @@ def errorcurve2(isodata,type_ = 'pure',prop=0.5,isospike = None, isoinv = None,e
         alpha, beta (float): there is a small dependance of the error on the fractionation
             factors (natural and instrumental). Values of beta and
             alpha can be set here if desired, although the effect on the optimal spikes
-            is slight unless the fractionations are very large. 
+            is slight unless the fractionations are very large.
         plottype (str): by default, the error is plotted. By setting this to 'ppmperamu'
             an estimate of the ppm per amu is plotted instead.
         scale (float): numerical factor to multiply all errors by, useful for changing units.
         ax: matplotlib axes handle.
         **kwargs -- additional arguments are passed to the plot command.
-    
+
     Example:
         >>> isodata_fe = IsoData('Fe')
         >>> errorcurve2(isodata_fe,'real',0.5,[54,57])
-    
+
     See also errorestimate, errorcurve
     """
     if ax is None:
         ax = plt.gca()
-    
+
     # Get data from isodata if not supplied as arguments
     if isoinv is None:
         if isodata.isoinv is not None:
             isoinv = isodata.isoinv
         else:
-            raise Exception('Inversion isotopes not set')
-    
+            raise Exception("Inversion isotopes not set")
+
     if isospike is None:
-        raise Exception('isospike not set')
-    
+        raise Exception("isospike not set")
+
     rawspike = isodata.rawspike
     # Convert isotope mass numbers to index numbers
     errorratio = isodata.isoindex(errorratio)
     isoinv = isodata.isoindex(isoinv)
     isospike = isodata.isoindex(isospike)
-    qvals = np.linspace(0.001,0.999,1000)
+    qvals = np.linspace(0.001, 0.999, 1000)
     errvals = np.zeros(len(qvals))
     ppmperamuvals = np.zeros(len(qvals))
-    
+
     if type_ == "pure":
         spikevector1 = np.zeros(isodata.nisos())
         spikevector1[isospike[0]] = 1.0
@@ -238,41 +349,79 @@ def errorcurve2(isodata,type_ = 'pure',prop=0.5,isospike = None, isoinv = None,e
     else:
         spikevector1 = isodata.rawspike[isospike[0], :]
         spikevector2 = isodata.rawspike[isospike[1], :]
-    
+
     for i in range(len(qvals)):
-        spike = qvals[i] * spikevector1 + (1-qvals[i]) * spikevector2
-        errvals[i],ppmperamuvals[i] = errorestimate(isodata,prop,spike,isoinv,errorratio,alpha,beta)
-    
-    if plottype=='ppmperamu':
+        spike = qvals[i] * spikevector1 + (1 - qvals[i]) * spikevector2
+        errvals[i], ppmperamuvals[i] = errorestimate(
+            isodata, prop, spike, isoinv, errorratio, alpha, beta
+        )
+
+    if plottype == "ppmperamu":
         plotvals = ppmperamuvals
     else:
         plotvals = errvals
-    
-    isolabel = isodata.isolabel()
-    ax.plot(qvals,scale*plotvals,**kwargs)
-    mine = np.amin(scale*plotvals)
-    ax.set_xlim(np.array([0,1]))
-    ax.set_ylim(np.array([0,5 * mine]))
-    if type_ == 'pure':
-        ax.set_xlabel('proportion of '+isolabel[isospike[0]]+' in '+isolabel[isospike[0]]+'-'+isolabel[isospike[1]]+' double spike')
-    else:
-        ax.set_xlabel('proportion of first rawspike in double spike')
-    
-    if errorratio is None:
-        ax.set_ylabel(r'Error in $\alpha$ (1SD)')
-    else:
-        ax.set_ylabel('Error in '+isolabel[errorratio[0]]+'/'+isolabel[errorratio[1]]+' (1SD)')
-    
-    ax.set_title(isolabel[isoinv[0]]+', '+isolabel[isoinv[1]]+', '+isolabel[isoinv[2]]+', '+isolabel[isoinv[3]]+' inversion')
 
-def errorcurveoptimalspike(isodata,type_ = 'pure',isospike = None,isoinv = None,errorratio = None,alpha = 0.0,beta = 0.0,plottype = 'default',scale =1.0, ax=None,**kwargs): 
+    isolabel = isodata.isolabel()
+    ax.plot(qvals, scale * plotvals, **kwargs)
+    mine = np.amin(scale * plotvals)
+    ax.set_xlim(np.array([0, 1]))
+    ax.set_ylim(np.array([0, 5 * mine]))
+    if type_ == "pure":
+        ax.set_xlabel(
+            "proportion of "
+            + isolabel[isospike[0]]
+            + " in "
+            + isolabel[isospike[0]]
+            + "-"
+            + isolabel[isospike[1]]
+            + " double spike"
+        )
+    else:
+        ax.set_xlabel("proportion of first rawspike in double spike")
+
+    if errorratio is None:
+        ax.set_ylabel(r"Error in $\alpha$ (1SD)")
+    else:
+        ax.set_ylabel(
+            "Error in "
+            + isolabel[errorratio[0]]
+            + "/"
+            + isolabel[errorratio[1]]
+            + " (1SD)"
+        )
+
+    ax.set_title(
+        isolabel[isoinv[0]]
+        + ", "
+        + isolabel[isoinv[1]]
+        + ", "
+        + isolabel[isoinv[2]]
+        + ", "
+        + isolabel[isoinv[3]]
+        + " inversion"
+    )
+
+
+def errorcurveoptimalspike(
+    isodata,
+    type_="pure",
+    isospike=None,
+    isoinv=None,
+    errorratio=None,
+    alpha=0.0,
+    beta=0.0,
+    plottype="default",
+    scale=1.0,
+    ax=None,
+    **kwargs
+):
     """Find the optimal double spike compositions and plot the corresponding error curves.
-    
+
     Args:
         isodata: object of class IsoData, e.g. IsoData('Fe')
                 This is the only mandatory argument.
         type_ (str): type of spike, 'pure' or 'real'. Real spikes, such as those from
-            Oak Ridge National Labs, contain impurities. See isodata.rawspike for 
+            Oak Ridge National Labs, contain impurities. See isodata.rawspike for
             their assumed compositions. By default pure spikes are used.
         isospike (array): the isotopes used in the double spike e.g. [54, 57].
             By default all choices of 2 isotopes are tried.
@@ -291,10 +440,10 @@ def errorcurveoptimalspike(isodata,type_ = 'pure',isospike = None,isoinv = None,
         scale (float): numerical factor to multiply all errors by, useful for changing units.
         ax: matplotlib axes handle.
         **kwargs: additional arguments are passed to the plot command
-    
+
     Example:
         >>> errorcurveoptimalspike(IsoData('Fe'))
-    
+
     See also optimalspike, errorcurve
     """
     if ax is None:
@@ -304,36 +453,48 @@ def errorcurveoptimalspike(isodata,type_ = 'pure',isospike = None,isoinv = None,
         if isodata.isoinv is not None:
             isoinv = isodata.isoinv
         else:
-            raise Exception('Inversion isotopes not set')
-    
+            raise Exception("Inversion isotopes not set")
+
     # Convert isotope mass numbers to index numbers
     errorratio = isodata.isoindex(errorratio)
     isospike = isodata.isoindex(isospike)
     isoinv = isodata.isoindex(isoinv)
     # Find the optimal spikes
-    os = optimalspike(isodata,type_,isospike,isoinv,errorratio,alpha,beta)
+    os = optimalspike(isodata, type_, isospike, isoinv, errorratio, alpha, beta)
     isolabel = isodata.isolabel()
     rawspikelabel = isodata.rawspikelabel()
-    for j in range(os['optspike'].shape[0]):
-        if type_ == 'pure':
-            spiked = np.where(os['optspike'][j,:] > 0)[0]
-            leglabel = isolabel[spiked[0]]+'-'+isolabel[spiked[1]]
+    for j in range(os["optspike"].shape[0]):
+        if type_ == "pure":
+            spiked = np.where(os["optspike"][j, :] > 0)[0]
+            leglabel = isolabel[spiked[0]] + "-" + isolabel[spiked[1]]
         else:
-            spiked = np.where(os['optspikeprop'][j,:] > 0)[0]
-            leglabel =rawspikelabel[spiked[0]]+'-'+rawspikelabel[spiked[1]]
-        errorcurve(isodata,os['optspike'][j,:],isoinv,errorratio,alpha,beta,plottype,label=leglabel,scale=scale,ax=ax)
-        
-    if plottype=='ppmperamu':
-        ax.set_ylim(np.array([0,5 * np.amin(os['optppmperamu'])]))
-    else:
-        ax.set_ylim(np.array([0,5 * np.amin(os['opterr'])]))
-    
-    ax.legend(loc='upper right')
+            spiked = np.where(os["optspikeprop"][j, :] > 0)[0]
+            leglabel = rawspikelabel[spiked[0]] + "-" + rawspikelabel[spiked[1]]
+        errorcurve(
+            isodata,
+            os["optspike"][j, :],
+            isoinv,
+            errorratio,
+            alpha,
+            beta,
+            plottype,
+            label=leglabel,
+            scale=scale,
+            ax=ax,
+        )
 
-if __name__=="__main__":
+    if plottype == "ppmperamu":
+        ax.set_ylim(np.array([0, 5 * np.amin(os["optppmperamu"])]))
+    else:
+        ax.set_ylim(np.array([0, 5 * np.amin(os["opterr"])]))
+
+    ax.legend(loc="upper right")
+
+
+if __name__ == "__main__":
     from .isodata import IsoData
-    idat = IsoData('Fe')    
-    errorcurveoptimalspike(idat,'real')
-    #errorcurve2d(idat)
+
+    idat = IsoData("Fe")
+    errorcurveoptimalspike(idat, "real")
+    # errorcurve2d(idat)
     plt.show()
-    

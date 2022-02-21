@@ -171,7 +171,7 @@ def ratiodata(isodata, di, prop, spike = None, alpha = 0.0, beta = 0.0):
         prop (float): proportion of double spike in double spike-sample mix.
         spike (array): the isotopic composition of the spike e.g. [0, 0.5, 0, 0.5]
             corresponds to a 50-50 mixture of the 2nd and 4th isotopes
-            (56Fe and 58Fe) in the case of Fe.
+            (56Fe and 58Fe) in the case of Fe. If None taken from isodata.spike
         alpha (float): natural fractionation factor
         beta (float): instrumental fractionation factor
         

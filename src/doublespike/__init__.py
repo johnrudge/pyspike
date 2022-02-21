@@ -28,6 +28,13 @@ Functions:
     monterun               - Generate a fake mass spectrometer run by Monte-Carlo simulation
     optimalspike           - Find the optimal double spike composition and double spike-sample mixture
                              proportions
+    ratiodata              - Calculate isotopic ratios describing system
+    sensitivity            - Calculate derivatives with respect to model parameters for sensitivity
+                             analysis
+    spike_calibration      - Calibrate a double spike using measurements of spike-standard mixtures
+    
+Classes:
+    IsoData                - Object for storing data on individual isotope systems
 """
 
 __version__ = '0.9.3'

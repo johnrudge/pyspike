@@ -161,13 +161,7 @@ def dscorrection(P, n, T, m, **kwargs):
     alpha_min = -1.0/max(abs(P));
 
     y1 = np.array([0.5, 0.0, 0.0])  # alternate starting guess if linear approximation goes way out
-    if alpha_lin>alpha_max:
-        y0 = y1
-    if alpha_lin<alpha_min:
-        y0 = y1
-    if beta_lin>alpha_max:
-        y0 = y1
-    if beta_lin<alpha_min:
+    if alpha_lin>alpha_max or alpha_lin<alpha_min or beta_lin>alpha_max or beta_lin<alpha_min:
         y0 = y1
     
     # by starting at the linear solution, solve the non-linear problem    

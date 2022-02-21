@@ -248,9 +248,6 @@ if __name__=="__main__":
 
     mixture_measurement = np.vstack([mixture1_measurement,mixture2_measurement])
 
-    spike_measurement = normalise_composition(spike_measurement)
-    mixture_measurement = normalise_composition(mixture_measurement)
-
     out = spike_calibration(isodata, spike_measurement, mixture_measurement)
     print(out)
     print("True spike", true_spike)

@@ -2,7 +2,7 @@
 
 from .isodata import ratioproptorealprop, normalise_composition, ratio
 import numpy as np
-from scipy.optimize import fsolve
+from scipy.optimize import fsolve, root
 
 
 def dsinversion(isodata, measured, spike=None, isoinv=None, standard=None):
@@ -87,7 +87,8 @@ def dsinversion(isodata, measured, spike=None, isoinv=None, standard=None):
 
     z = np.zeros((nmeasured, 3))
     for i in range(nobs):
-        z[i, :] = dscorrection(P, n[i, :], T[i, :], m[i, :], xtol=1e-12)
+        z[i, :] = dscorrection(P, n[i, :], T[i, :], m[i, :])
+
     out = {}
     lambda_ = z[:, 0]
     out["alpha"] = z[:, 1]
@@ -103,20 +104,12 @@ def dsinversion(isodata, measured, spike=None, isoinv=None, standard=None):
     Am = ratio(measured, isonum)
 
     # Calculate sample and mixture proportion, and proportion by mole
-    AM = np.zeros_like(Am)
-    AN = np.zeros_like(Am)
-    out["prop"] = np.zeros_like(out["alpha"])
-    for i in np.arange(nobs):
-        AM[i, :] = Am[i, :] * np.exp(-AP * out["beta"][i])
-        AN[i, :] = An[i, :] * np.exp(-AP * out["alpha"][i])
-        prop = ratioproptorealprop(lambda_[i], AT[i, :], AN[i, :])
-        out["prop"][i] = prop
-
-    out["sample"] = np.zeros_like(measured)
-    out["mixture"] = np.zeros_like(measured)
-    out["sample"][:, isonum[0]] = 1
+    AM = Am * np.exp(-AP[np.newaxis, :] * out["beta"][:, np.newaxis])
+    AN = An * np.exp(-AP[np.newaxis, :] * out["alpha"][:, np.newaxis])
+    out["prop"] = ratioproptorealprop(lambda_, AT, AN)
+    out["sample"] = np.ones_like(measured)
+    out["mixture"] = np.ones_like(measured)
     out["sample"][:, isonum[1:]] = AN
-    out["mixture"][:, isonum[0]] = 1
     out["mixture"][:, isonum[1:]] = AM
     out["sample"] = normalise_composition(out["sample"])
     out["mixture"] = normalise_composition(out["mixture"])
@@ -150,13 +143,7 @@ def dscorrection(P, n, T, m, **kwargs):
     """
     # start by solving the linear problem
     b = np.transpose((m - n))
-    A = np.array(
-        [
-            np.transpose((T - n)),
-            np.transpose((np.multiply(-n, P))),
-            np.transpose((np.multiply(m, P))),
-        ]
-    )
+    A = np.array([T - n, -n * P, m * P])
     y0 = np.linalg.solve(A, b)
 
     # match up linear exponents with exponential ones
@@ -168,19 +155,19 @@ def dscorrection(P, n, T, m, **kwargs):
     alpha_max = 1.0 / max(abs(P))
     alpha_min = -1.0 / max(abs(P))
 
-    y1 = np.array(
-        [0.5, 0.0, 0.0]
-    )  # alternate starting guess if linear approximation goes way out
     if (
         alpha_lin > alpha_max
         or alpha_lin < alpha_min
         or beta_lin > alpha_max
         or beta_lin < alpha_min
     ):
-        y0 = y1
+        # alternate starting guess if linear approximation goes way out
+        y0 = np.array([0.5, 0.0, 0.0])
 
     # by starting at the linear solution, solve the non-linear problem
-    y = fsolve(F, y0, args=(P, n, T, m), fprime=J, **kwargs)
+    y = fsolve(F, y0, args=(P, n, T, m), fprime=J, xtol=1e-12, col_deriv=True, **kwargs)
+    # y = root(F, y0, args=(P, n, T, m), jac=J, options = {'xtol':1e-12,'col_deriv':True}, method='hybr').x
+
     z = y
     z[1] = y[1] / (1 - y[0])
     return z
@@ -199,8 +186,7 @@ def F_params(y, P, n, T, m):
 def F(y, P, n, T, m):
     """The nonlinear equations to solve."""
     lambda_, alpha, beta, N, M = F_params(y, P, n, T, m)
-    fval = lambda_ * T + (1 - lambda_) * N - M  # equation (10)
-    return fval
+    return lambda_ * T + (1 - lambda_) * N - M  # equation (10)
 
 
 def J(y, P, n, T, m):
@@ -209,8 +195,7 @@ def J(y, P, n, T, m):
     dfdlambdaprime = T - N * (1 + alpha * P)
     dfdu = -N * P
     dfdbeta = M * P
-    Jac = np.array([dfdlambdaprime, dfdu, dfdbeta]).T  # equation (15)
-    return Jac
+    return np.array([dfdlambdaprime, dfdu, dfdbeta])  # equation (15)
 
 
 if __name__ == "__main__":

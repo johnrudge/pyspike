@@ -335,15 +335,15 @@ def normalise_composition(comp):
 
 def ratioproptorealprop(lambda_, ratio_a, ratio_b):
     """Convert a proportion in ratio space to one per mole."""
-    a = 1 + sum(ratio_a)
-    b = 1 + sum(ratio_b)
+    a = 1 + np.sum(ratio_a, axis=-1)
+    b = 1 + np.sum(ratio_b, axis=-1)
     return lambda_ * a / (lambda_ * a + (1 - lambda_) * b)  # equation (9)
 
 
 def realproptoratioprop(prop, ratio_a, ratio_b):
     """Convert a proportion per mole into ratio space."""
-    a = 1 + sum(ratio_a)
-    b = 1 + sum(ratio_b)
+    a = 1 + np.sum(ratio_a, axis=-1)
+    b = 1 + np.sum(ratio_b, axis=-1)
     return prop * b / (prop * b + (1 - prop) * a)  # equation (9)
 
 

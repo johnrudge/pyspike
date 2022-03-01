@@ -1,8 +1,7 @@
 """Routines for Monte Carlo mass spec simulation."""
 import numpy as np
 from numpy.random import default_rng
-from .isodata import IsoData, normalise_composition
-from .inversion import dsinversion
+from .isodata import normalise_composition
 
 
 def monterun(isodata, prop, spike=None, alpha=0.0, beta=0.0, n=1000):
@@ -110,6 +109,9 @@ def monte_single(composition, emod, n=None):
 
 
 if __name__ == "__main__":
+    from .isodata import IsoData
+    from .inversion import dsinversion
+
     idat = IsoData("Fe")
     idat.set_spike([0.0, 0.0, 0.5, 0.5])
     idat.set_errormodel()

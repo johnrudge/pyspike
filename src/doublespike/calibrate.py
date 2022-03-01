@@ -1,10 +1,4 @@
-from .isodata import (
-    IsoData,
-    normalise_composition,
-    realproptoratioprop,
-    ratioproptorealprop,
-)
-from .inversion import dscorrection, dsinversion
+from .isodata import normalise_composition, realproptoratioprop, ratioproptorealprop
 from .errors import calcratiocov
 from scipy.optimize import minimize
 import numpy as np
@@ -268,6 +262,7 @@ def dmt_expected_dz(z, P, n, n_m, n_t):
 
 if __name__ == "__main__":
     from .monte import monterun
+    from .isodata import IsoData
 
     isodata = IsoData("Fe")
     n = int(1e3)

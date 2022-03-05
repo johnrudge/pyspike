@@ -37,7 +37,7 @@ Classes:
     IsoData                - Object for storing data on individual isotope systems
 """
 
-__version__ = "0.9.4"
+__version__ = "0.9.5"
 __author__ = "John F. Rudge"
 
 from .isodata import IsoData

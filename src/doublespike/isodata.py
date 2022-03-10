@@ -234,7 +234,7 @@ class IsoData:
 
         R = np.array(R)  # ensure working with a numpy array
 
-        # Equation (35), modified to allow setting of different resistors for different beams
+        # Equation (35), modified to allow setting of different resistors for different beams as suggested by Chris Coath
         a = 4 * k * T * (R_reference**2) / (deltat * R)  # Johnson-Nyquist noise
         b = elementarycharge * R_reference / deltat  # Counting statistics
 

@@ -198,18 +198,24 @@ class IsoData:
         T=300.0,
         radiogenic=None,
         measured_type="fixed-total",
+        R_reference=1e11,
     ):
         """Set the error model used for error estimates and monte carlo runs.
 
         Args:
             intensity (float): Total beam intensity in volts
             delta_t (float): Integration time in seconds
-            R (float): resistance in Ohms
+            R (float/array): resistance in Ohms
+                If a float then resistors are identical for all isotopes
+                If an array then individual resistances for each isotope
             T (float): temperature in K
             radiogenic (str): If True put errors on the standard (unspiked) run, if False do not.
-                        If None, then 'Pb','Sr','Hf','Os','Nd' are assumed radiogenic, others not.
+                If None, then 'Pb','Sr','Hf','Os','Nd' are assumed radiogenic, others not.
             measured_type (str): If 'fixed-total' then total beam intensity of mixture is fixed,
-                           if 'fixed-sample' then voltage for the sample is fixed.
+                If 'fixed-sample' then beam current from the sample is fixed.
+            R_reference (float): reference resistance used for describing beam intensity.
+                The total beam current is intensity/R_reference
+                e.g. the 10 V default beam corresponds to 100 pA with R_reference=1e11 Ohms.
         """
         if radiogenic is None:
             if self.element in ["Pb", "Sr", "Hf", "Os", "Nd"]:
@@ -217,10 +223,20 @@ class IsoData:
             else:
                 radiogenic = False
 
-        a = 4 * k * T * R / deltat  # equation (35), Johnson–Nyquist noise
-        b = elementarycharge * R / deltat  # equation (35), counting statistics
-
         nisos = self.nisos()
+
+        if isinstance(R, float):
+            # if a float given for R assume resistors are the same for all beams
+            R = R * np.ones(nisos)
+
+        if len(R) != nisos:
+            raise Exception("Must have same length for R array as number of isotopes.")
+
+        R = np.array(R)  # ensure working with a numpy array
+
+        # Equation (35), modified to allow setting of different resistors for different beams
+        a = 4 * k * T * (R_reference**2) / (deltat * R)  # Johnson-Nyquist noise
+        b = elementarycharge * R_reference / deltat  # Counting statistics
 
         # by default assume Johnson noise and counting statistics
         self.errormodel["measured"] = {

@@ -18,3 +18,8 @@ This is a standard python 3 package, which can be installed using pip:
 ```
 pip install doublespike
 ```
+
+## Usage
+
+A series of Jupyter python notebooks describing usage can be found in the [src/](src/) folder. New
+users should begin by looking at [src/example.ipynb](src/example.ipynb) 

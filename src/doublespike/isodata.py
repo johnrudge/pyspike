@@ -29,7 +29,6 @@ def loadrawdata(filename=None):
             el = row[0].strip('"')
             j = j + 1
             els.append(el)
-            i = 0
             data[el] = {
                 "element": el,
                 "isonum": [],

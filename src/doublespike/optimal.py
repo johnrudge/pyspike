@@ -4,7 +4,7 @@ import numpy as np
 import itertools
 from scipy.special import binom
 from scipy.optimize import minimize
-from scipy.special import expit, logit
+from scipy.special import expit
 from .errors import errorestimate
 
 
@@ -138,7 +138,7 @@ def optimalspike(
     optppmperamu = np.array(optppmperamus)
     optisoinv = isoinvvals
 
-    ## Sort in ascending order of error
+    # Sort in ascending order of error
     ix = np.argsort(opterr)
 
     # avoid masses of output by limiting to all possibilites in case of pure spikes
@@ -166,7 +166,7 @@ def singleoptimalspike(
     alpha=0.0,
     beta=0.0,
 ):
-    """Calculate the composition of the optimal double spike given the isotopes used in the inversion and of those the isotopes we are spiking."""
+    """Calculate the composition of the optimal double spike."""
     if type_ == "pure":
         spikevector1 = np.zeros(isodata.nisos())
         spikevector1[isospike[0]] = 1.0
@@ -231,7 +231,6 @@ def singleoptimalspike(
 if __name__ == "__main__":
     from .isodata import IsoData
 
-    ##isodata = IsoData('Fe')
     isodata_ca = IsoData("Ca")
     isoinv = [40, 42, 44, 48]
 

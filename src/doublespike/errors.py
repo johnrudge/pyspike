@@ -1,7 +1,7 @@
 """Module for performing linear error propagation."""
 
 import numpy as np
-from .isodata import realproptoratioprop, ratio
+from .isodata import realproptoratioprop
 
 
 def errorestimate(
@@ -237,7 +237,8 @@ def z_sensitivity(z, P, n, T, m):
     dfdm = -np.diag(np.exp(-beta * P))  # equation (20)
     dfdn = (1 - lambda_) * np.diag(np.exp(-alpha * P))  # equation (20)
 
-    ## matrix to convert from (lambda, (1-lambda)alpha,beta) to (lambda,alpha,beta), equation (22)
+    # matrix to convert from (lambda, (1-lambda)alpha,beta) to
+    # (lambda,alpha,beta), equation (22)
     K = np.array(
         [[1, 0, 0], [(alpha / (1 - lambda_)), (1 / (1 - lambda_)), 0], [0, 0, 1]]
     )
@@ -267,7 +268,6 @@ def sensitivity(z, AP, An, AT, Am, invrat):
         where AN are isotopic ratios of sample
         and AM are isotopic ratios of mixture.
     """
-    lambda_ = z[0]
     alpha = z[1]
     beta = z[2]
     AM = Am * np.exp(-AP * beta)
@@ -315,9 +315,6 @@ def sensitivity(z, AP, An, AT, Am, invrat):
 
 def fcerrorpropagation(z, AP, An, AT, Am, VAn, VAT, VAm, invrat):
     """Linear error propagation for the fractionation correction."""
-    Vn = VAn[np.ix_(invrat, invrat)]
-    VT = VAT[np.ix_(invrat, invrat)]
-    Vm = VAm[np.ix_(invrat, invrat)]
 
     dzdAn, dzdAT, dzdAm, dANdAn, dANdAT, dANdAm, dAMdAn, dAMdAT, dAMdAm = sensitivity(
         z, AP, An, AT, Am, invrat

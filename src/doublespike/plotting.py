@@ -104,7 +104,7 @@ def errorcurve2d(
     os = optimalspike(isodata, type_, isospike, isoinv, errorratio, alpha, beta)
 
     if plottype == "ppmperamu":
-        C = ax.contour(
+        ax.contour(
             prop,
             spikeprop,
             ppmperamuvals,
@@ -114,7 +114,7 @@ def errorcurve2d(
             **kwargs
         )
     else:
-        C = ax.contour(
+        ax.contour(
             prop,
             spikeprop,
             errvals,
@@ -332,7 +332,6 @@ def errorcurve2(
     if isospike is None:
         raise Exception("isospike not set")
 
-    rawspike = isodata.rawspike
     # Convert isotope mass numbers to index numbers
     errorratio = isodata.isoindex(errorratio)
     isoinv = isodata.isoindex(isoinv)

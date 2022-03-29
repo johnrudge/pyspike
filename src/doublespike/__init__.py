@@ -32,7 +32,7 @@ Functions:
     sensitivity            - Calculate derivatives with respect to model parameters for sensitivity
                              analysis
     spike_calibration      - Calibrate a double spike using measurements of spike-standard mixtures
-    
+
 Classes:
     IsoData                - Object for storing data on individual isotope systems
 """

@@ -29,8 +29,10 @@ def cocktail(type_="pure", filename="cocktails.csv", isodatas=None):
     if isodatas is None:
         elements = list(default_data.keys())
         isodatas = [IsoData(el) for el in elements]
-        isodatas = [i for i in isodatas if len(i.isonum)>=4]  # restrict to those with at least 4 isotopes
-        
+        isodatas = [
+            i for i in isodatas if len(i.isonum) >= 4
+        ]  # restrict to those with at least 4 isotopes
+
     elnames = [i.element for i in isodatas]
     print("Cocktail list for", elnames)
 

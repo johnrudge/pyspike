@@ -38,7 +38,6 @@ def monterun(isodata, prop, spike=None, alpha=0.0, beta=0.0, n=1000):
     mass = isodata.mass
     emodel = isodata.errormodel
     spike = spike / sum(spike)
-    nisos = isodata.nisos()
 
     if isinstance(alpha, float):
         alpha = alpha * np.ones(n)

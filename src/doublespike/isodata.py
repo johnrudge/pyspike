@@ -203,7 +203,7 @@ class IsoData:
 
         Args:
             intensity (float): Total beam intensity in volts
-            delta_t (float): Integration time in seconds
+            deltat (float): Integration time in seconds
             R (float/array): resistance in Ohms
                 If a float then resistors are identical for all isotopes
                 If an array then individual resistances for each isotope

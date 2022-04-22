@@ -5,8 +5,9 @@ import numpy as np
 
 def test_calibrate():
     # Check the calibration routine does the right thing for perfect measurements
-    isodata = IsoData("Fe")
-    true_spike = np.array([1e-3, 1e-2, 0.4, 0.6])
+    isodata = IsoData("Ca")
+    isodata.isoinv = [42, 43, 44, 46]
+    true_spike = np.array([1e-3, 1e-2, 0.4, 0.6, 1e-4, 1e-6])
     true_spike = true_spike / sum(true_spike)
 
     beta_spike = 0.8

@@ -119,8 +119,10 @@ class IsoData:
 
     @mass.setter
     def mass(self, value):
-        """Set atomic masses."""
-        self._mass = np.array(value)
+        if value is None:
+            self._mass = None
+        else:
+            self._mass = np.array(value)
 
     @property
     def isonum(self):
@@ -129,7 +131,10 @@ class IsoData:
 
     @isonum.setter
     def isonum(self, value):
-        self._isonum = np.array(value, dtype=int)
+        if value is None:
+            self._isonum = None
+        else:
+            self._isonum = np.array(value, dtype=int)
 
     @property
     def isoinv(self):
@@ -150,8 +155,11 @@ class IsoData:
 
     @standard.setter
     def standard(self, value):
-        std = np.array(value)
-        self._standard = std / sum(std)
+        if value is None:
+            self._standard = None
+        else:
+            std = np.array(value)
+            self._standard = std / sum(std)
 
     @property
     def spike(self):
@@ -173,8 +181,11 @@ class IsoData:
 
     @rawspike.setter
     def rawspike(self, value):
-        rs = np.array(value)
-        self._rawspike = rs / rs.sum(axis=1)
+        if value is None:
+            self._rawspike = None
+        else:
+            rs = np.array(value)
+            self._rawspike = rs / rs.sum(axis=1)
 
     def isoindex(self, ix):
         """Give the data index corresponding to a given isotope number e.g. 56->1."""
@@ -211,6 +222,8 @@ class IsoData:
 
     def nisos(self):
         """Number of isotopes in system."""
+        if self.isonum is None:
+            return 0
         return len(self.isonum)
 
     def nratios(self):

@@ -107,39 +107,74 @@ class IsoData:
         return "IsoData()"
 
     def __str__(self):
-        txt = "\n ".join("%s: %s" % item for item in vars(self).items())
+        txt = "\n ".join(
+            f"{item[0].strip('_')}: {item[1]}" for item in vars(self).items()
+        )
         return txt
 
-    def set_element(self, element):
-        """Set string labelling element."""
-        self.element = element
+    @property
+    def mass(self):
+        """Atomic masses of the isotopes."""
+        return self._mass
 
-    def set_mass(self, mass):
+    @mass.setter
+    def mass(self, value):
         """Set atomic masses."""
-        self.mass = np.array(mass)
+        self._mass = np.array(value)
 
-    def set_isonum(self, isonum):
-        """Set isotope numbers."""
-        self.isonum = np.array(isonum, dtype=int)
+    @property
+    def isonum(self):
+        "Isotope numbers."
+        return self._isonum
 
-    def set_isoinv(self, isoinv):
-        """Set inversion isotopes."""
-        self.isoinv = np.array(isoinv, dtype=int)
+    @isonum.setter
+    def isonum(self, value):
+        self._isonum = np.array(value, dtype=int)
 
-    def set_standard(self, standard):
-        """Set composition of standard."""
-        std = np.array(standard)
-        self.standard = std / sum(std)
+    @property
+    def isoinv(self):
+        "Inversion isotopes."
+        return self._isoinv
 
-    def set_spike(self, spike):
-        """Set composition of double spike."""
-        spk = np.array(spike)
-        self.spike = spk / sum(spk)
+    @isoinv.setter
+    def isoinv(self, value):
+        if value is None:
+            self._isoinv = None
+        else:
+            self._isoinv = np.array(value, dtype=int)
 
-    def set_rawspike(self, rawspike):
-        """Set compositions of single spikes."""
-        rs = np.array(rawspike)
-        self.rawspike = rs / rs.sum(axis=0)
+    @property
+    def standard(self):
+        "Composition of standard."
+        return self._standard
+
+    @standard.setter
+    def standard(self, value):
+        std = np.array(value)
+        self._standard = std / sum(std)
+
+    @property
+    def spike(self):
+        "Composition of double spike."
+        return self._spike
+
+    @spike.setter
+    def spike(self, value):
+        if value is None:
+            self._spike = None
+        else:
+            spk = np.array(value)
+            self._spike = spk / sum(spk)
+
+    @property
+    def rawspike(self):
+        "Compositions of single spikes."
+        return self._rawspike
+
+    @rawspike.setter
+    def rawspike(self, value):
+        rs = np.array(value)
+        self._rawspike = rs / rs.sum(axis=1)
 
     def isoindex(self, ix):
         """Give the data index corresponding to a given isotope number e.g. 56->1."""

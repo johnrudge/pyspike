@@ -219,9 +219,9 @@ def dindividual_t_expected_dT(betat, T, P):
 def z_to_params(z, P, n_m, n_t):
     """Convert single vectors of unknowns z into separate vectors of unknowns."""
     lambda_ = z[0:n_m]
-    beta = z[n_m:2 * n_m]
-    betat = z[2 * n_m: 2 * n_m + n_t]
-    T = z[2 * n_m + n_t:]
+    beta = z[n_m : 2 * n_m]
+    betat = z[2 * n_m : 2 * n_m + n_t]
+    T = z[2 * n_m + n_t :]
     return lambda_, beta, betat, T
 
 
@@ -247,14 +247,14 @@ def dmt_expected_dz(z, P, n, n_m, n_t):
     for i in range(n_m):
         dmdz[i, :, i] = dindividual_m_expected_dlambda(lambda_[i], beta[i], T, P, n)
         dmdz[i, :, n_m + i] = dindividual_m_expected_dbeta(lambda_[i], beta[i], T, P, n)
-        dmdz[i, :, 2 * n_m + n_t:] = dindividual_m_expected_dT(
+        dmdz[i, :, 2 * n_m + n_t :] = dindividual_m_expected_dT(
             lambda_[i], beta[i], T, P, n
         )
 
     dtdz = np.zeros((n_t, len(P), len(z)))
     for i in range(n_t):
         dtdz[i, :, 2 * n_m + i] = dindividual_t_expected_dbetat(betat[i], T, P)
-        dtdz[i, :, 2 * n_m + n_t:] = dindividual_t_expected_dT(betat[i], T, P)
+        dtdz[i, :, 2 * n_m + n_t :] = dindividual_t_expected_dT(betat[i], T, P)
 
     return dmdz, dtdz
 

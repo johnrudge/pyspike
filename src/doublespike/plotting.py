@@ -75,8 +75,8 @@ def errorcurve2d(
     isospike = isodata.isoindex(isospike)
 
     if type_ == "pure":
-        spike1 = np.zeros(isodata.nisos())
-        spike2 = np.zeros(isodata.nisos())
+        spike1 = np.zeros(isodata.nisos)
+        spike2 = np.zeros(isodata.nisos)
         spike1[isospike[0]] = 1
         spike2[isospike[1]] = 1
     else:
@@ -128,7 +128,7 @@ def errorcurve2d(
     ax.set_ylim(np.array([0, 1]))
     ax.set_xlabel("proportion of double spike in double spike-sample mix")
 
-    isolabel = isodata.isolabel()
+    isolabel = isodata.isolabel
     if type_ == "pure":
         ax.set_ylabel(
             "proportion of "
@@ -140,7 +140,7 @@ def errorcurve2d(
             + " double spike"
         )
     else:
-        rawspikelabel = isodata.rawspikelabel()
+        rawspikelabel = isodata.rawspikelabel
         ax.set_ylabel(
             "proportion of "
             + rawspikelabel[isospike[0]]
@@ -251,7 +251,7 @@ def errorcurve(
     ax.set_xlim(np.array([0, 1]))
     ax.set_ylim(np.array([0, 5 * mine]))
     ax.set_xlabel("proportion of double spike in double spike-sample mix")
-    isolabel = isodata.isolabel()
+    isolabel = isodata.isolabel
     if errorratio is None:
         ax.set_ylabel(r"Error in $\alpha$ (1SD)")
     else:
@@ -341,9 +341,9 @@ def errorcurve2(
     ppmperamuvals = np.zeros(len(qvals))
 
     if type_ == "pure":
-        spikevector1 = np.zeros(isodata.nisos())
+        spikevector1 = np.zeros(isodata.nisos)
         spikevector1[isospike[0]] = 1.0
-        spikevector2 = np.zeros(isodata.nisos())
+        spikevector2 = np.zeros(isodata.nisos)
         spikevector2[isospike[1]] = 1.0
     else:
         spikevector1 = isodata.rawspike[isospike[0], :]
@@ -360,7 +360,7 @@ def errorcurve2(
     else:
         plotvals = errvals
 
-    isolabel = isodata.isolabel()
+    isolabel = isodata.isolabel
     ax.plot(qvals, scale * plotvals, **kwargs)
     mine = np.amin(scale * plotvals)
     ax.set_xlim(np.array([0, 1]))
@@ -460,8 +460,8 @@ def errorcurveoptimalspike(
     isoinv = isodata.isoindex(isoinv)
     # Find the optimal spikes
     os = optimalspike(isodata, type_, isospike, isoinv, errorratio, alpha, beta)
-    isolabel = isodata.isolabel()
-    rawspikelabel = isodata.rawspikelabel()
+    isolabel = isodata.isolabel
+    rawspikelabel = isodata.rawspikelabel
     for j in range(os["optspike"].shape[0]):
         if type_ == "pure":
             spiked = np.where(os["optspike"][j, :] > 0)[0]

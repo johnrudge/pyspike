@@ -94,7 +94,7 @@ def dsinversion(isodata, measured, spike=None, isoinv=None, standard=None):
     out["alpha"] = z[:, 1]
     out["beta"] = z[:, 2]
 
-    isonum = np.arange(isodata.nisos())
+    isonum = np.arange(isodata.nisos)
     isonum = isonum[isonum != isoinv[0]]
     isonum = np.concatenate((np.array([isoinv[0]]), isonum))
 
@@ -202,7 +202,7 @@ if __name__ == "__main__":
     from .isodata import IsoData
 
     isodata_fe = IsoData("Fe")
-    isodata_fe.set_spike([0.0, 0.0, 0.5, 0.5])
+    isodata_fe.spike = [0.0, 0.0, 0.5, 0.5]
     measured = np.array([0.2658, 4.4861, 2.6302, 2.6180])
 
     z = dsinversion(isodata_fe, measured)

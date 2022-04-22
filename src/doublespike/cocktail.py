@@ -49,7 +49,7 @@ def cocktail(type_="pure", filename="cocktails.csv", isodatas=None):
         print(element)
         isodata = IsoData(element)
         isodata.set_errormodel()
-        if (type_ == "pure") or (type_ == "real" and isodata.nrawspikes() > 1):
+        if (type_ == "pure") or (type_ == "real" and isodata.nrawspikes > 1):
             os = optimalspike(isodata, type_)
             optspike = os["optspike"]
             opterr = os["opterr"]
@@ -60,7 +60,7 @@ def cocktail(type_="pure", filename="cocktails.csv", isodatas=None):
 
             optisoinv = isodata.isoindex(optisoinv)
 
-            isoname = isodata.isoname()
+            isoname = isodata.isoname
 
             def iname(i):
                 return isoname[i]

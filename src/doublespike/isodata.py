@@ -96,7 +96,7 @@ class IsoData:
             self.standard = None
             self.rawspike = None
         self.spike = None
-        if self.nisos() == 4:
+        if self.nisos == 4:
             self.isoinv = self.isonum
         else:
             self.isoinv = None
@@ -208,28 +208,34 @@ class IsoData:
             f = np.vectorize(isonum_to_idx)
             return f(ix)
 
+    @property
     def isoname(self):
         """Names of the isotopes."""
         return [self.element + str(i) for i in self.isonum]
 
+    @property
     def isolabel(self):
         """Isotope labels for plotting."""
         return ["$^{" + str(i) + "}$" + self.element for i in self.isonum]
 
+    @property
     def rawspikelabel(self):
         """Single spike labels for plotting."""
         return ["spike " + str(i + 1) for i in range(self.rawspike.shape[0])]
 
+    @property
     def nisos(self):
         """Number of isotopes in system."""
         if self.isonum is None:
             return 0
         return len(self.isonum)
 
+    @property
     def nratios(self):
         """Number of isotope ratios to describe system."""
-        return self.nisos() - 1
+        return self.nisos - 1
 
+    @property
     def nrawspikes(self):
         """Number of single spikes available."""
         if self.rawspike is None:
@@ -270,7 +276,7 @@ class IsoData:
             else:
                 radiogenic = False
 
-        nisos = self.nisos()
+        nisos = self.nisos
 
         if isinstance(R, float):
             # if a float given for R assume resistors are the same for all beams
@@ -319,27 +325,17 @@ class IsoData:
                 "c": 0.0 * np.ones(nisos),
             }
 
-    def set_custom_errormodel(self, errormodel):
-        """Set the error model used for error estimates and monte carlo runs.
-
-        Args:
-            errormodel: A dictionary giving the complete errormodel.
-
-        See IsoData.errormodel for format of dictionary.
-        """
-        self.errormodel = errormodel
-
     def ratio(self, composition, denominator_isotope):
         """Convert a compositional array into array of isotopic ratios."""
         di = self.isoindex(denominator_isotope)
-        ni = np.arange(self.nisos())
+        ni = np.arange(self.nisos)
         ni = ni[ni != di]
         return composition[..., ni] / composition[..., di, np.newaxis]
 
     def composition(self, data, denominator_isotope):
         """Convert an array of isotopic ratios to an array of compositional vectors."""
         di = self.isoindex(denominator_isotope)
-        ni = np.arange(self.nisos())
+        ni = np.arange(self.nisos)
         ni = ni[ni != di]
         comp_shape = list(data.shape)
         comp_shape[-1] += 1
@@ -355,7 +351,7 @@ class IsoData:
 
         isoinv = self.isoindex(isoinv)  # convert to indices
 
-        isonum = np.arange(self.nisos())
+        isonum = np.arange(self.nisos)
         isonum = isonum[isonum != isoinv[0]]
         isonum = np.concatenate((np.array([isoinv[0]]), isonum))
 
@@ -366,7 +362,7 @@ class IsoData:
     def rationame(self, denominator_isotope):
         """Names of the isotopic ratios."""
         di = self.isoindex(denominator_isotope)
-        ni = np.arange(self.nisos())
+        ni = np.arange(self.nisos)
         ni = ni[ni != di]
         return np.array(
             [

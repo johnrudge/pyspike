@@ -112,7 +112,7 @@ if __name__ == "__main__":
     from .inversion import dsinversion
 
     idat = IsoData("Fe")
-    idat.set_spike([0.0, 0.0, 0.5, 0.5])
+    idat.spike = [0.0, 0.0, 0.5, 0.5]
     idat.set_errormodel()
     measuredv = monterun(idat, prop=0.5, alpha=-0.2, beta=1.8, n=1000)
     print(measuredv[0:10, :])

@@ -68,7 +68,7 @@ def optimalspike(
 
     # If don't specify inversion isotopes, do all possible combinations
     if isoinv is None:
-        isoinv = list(itertools.combinations(np.arange(isodata.nisos()), 4))
+        isoinv = list(itertools.combinations(np.arange(isodata.nisos), 4))
     else:
         isoinv = list([np.array(isoinv)])
 
@@ -81,11 +81,11 @@ def optimalspike(
                 # look at all combinations of spikes from the inversion isotopes
                 isospikev = list(itertools.combinations(isoinv[i], 2))
             else:
-                if isodata.nrawspikes() == 0:
+                if isodata.nrawspikes == 0:
                     return {}  # can't proceed if no single spikes to use
                 # look at all combinations of spikes from the all rawspikes
                 isospikev = list(
-                    itertools.combinations(np.arange(isodata.nrawspikes()), 2)
+                    itertools.combinations(np.arange(isodata.nrawspikes), 2)
                 )
         else:
             isospikev = list([isospike])
@@ -119,10 +119,10 @@ def optimalspike(
             )
         except:
             # try to fail gracefully
-            optspike = np.zeros(isodata.nisos())
+            optspike = np.zeros(isodata.nisos)
             optprop = 0.0
             opterr = 1e32
-            optspikeprop = np.zeros(isodata.nisos())
+            optspikeprop = np.zeros(isodata.nisos)
             optppmperamu = 1e32
 
         optspikes.append(optspike)
@@ -142,7 +142,7 @@ def optimalspike(
     ix = np.argsort(opterr)
 
     # avoid masses of output by limiting to all possibilites in case of pure spikes
-    max_noutput = min(len(ix), int(6 * binom(isodata.nisos(), 4)))
+    max_noutput = min(len(ix), int(6 * binom(isodata.nisos, 4)))
     ix = ix[0:max_noutput]
 
     out = {
@@ -168,9 +168,9 @@ def singleoptimalspike(
 ):
     """Calculate the composition of the optimal double spike."""
     if type_ == "pure":
-        spikevector1 = np.zeros(isodata.nisos())
+        spikevector1 = np.zeros(isodata.nisos)
         spikevector1[isospike[0]] = 1.0
-        spikevector2 = np.zeros(isodata.nisos())
+        spikevector2 = np.zeros(isodata.nisos)
         spikevector2[isospike[1]] = 1.0
     else:
         spikevector1 = isodata.rawspike[isospike[0], :]

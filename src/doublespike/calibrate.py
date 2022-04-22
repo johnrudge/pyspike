@@ -118,7 +118,7 @@ def spike_calibration(
     calibrated_spike[nume] = T
 
     # For isotopes that were not used in inversion, work out an expectation based on known betat
-    isonum = np.arange(isodata.nisos())
+    isonum = np.arange(isodata.nisos)
     unused = np.array(list(set(isonum).difference(set(isoinv))))
     if len(unused) > 0:
         expected_spike_measurement = np.mean(spike_measurement, axis=0)

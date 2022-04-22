@@ -87,7 +87,7 @@ def errorestimate(
         # Now change coordinates to get variance of ratio we're interested in
         newVAN = changedenomcov(AN, VAN, di, errorratio[1])
 
-        isonums = np.arange(isodata.nisos())
+        isonums = np.arange(isodata.nisos)
         newAni = isonums[isonums != errorratio[1]]
         erat = np.where(errorratio[0] == newAni)[0][0]
         error = np.sqrt(newVAN[erat, erat])
@@ -332,6 +332,6 @@ if __name__ == "__main__":
     from .isodata import IsoData
 
     isodata = IsoData("Fe")
-    isodata.set_spike([0.0, 0.0, 0.5, 0.5])
+    isodata.spike = [0.0, 0.0, 0.5, 0.5]
     alpha_err, ppm_err = errorestimate(isodata, prop=0.5, alpha=-0.2, beta=1.8)
     print(alpha_err, ppm_err)

@@ -1,7 +1,7 @@
 """Module for determining optimal double spikes."""
 
-import numpy as np
 import itertools
+import numpy as np
 from scipy.special import binom
 from scipy.optimize import minimize
 from scipy.special import expit
@@ -39,7 +39,7 @@ def optimalspike(
         is slight unless the fractionations are very large.
 
     Returns:
-        All the outputs are provided as matrices. Each column represents an isotope
+        All the outputs are provided as arrays in a dict. Each column represents an isotope
         (see isodata.isonum for the isotope numbers) e.g. for Fe the columns
         correspond to the isotopes 54Fe, 56Fe, 57Fe, 58Fe. The rows represent the
         different combinations of double spikes and isotopes being tried, in order of
@@ -54,7 +54,7 @@ def optimalspike(
 
     Example:
         >>> isodata_fe = IsoData('Fe')
-        >>> optspike,optprop,opterr,optisoinv,optspikeprop,optppmperamu = optimalspike(isodata_fe,'pure')
+        >>> opt = optimalspike(isodata_fe,'pure')
     """
     # Check if isoinv is set in isodata
     if isoinv is None:
@@ -117,7 +117,9 @@ def optimalspike(
                 alpha,
                 beta,
             )
-        except:
+        except Exception as e:
+            print("Error with:", isospikevals[i, :], isoinvvals[i, :])
+            print(e)
             # try to fail gracefully
             optspike = np.zeros(isodata.nisos)
             optprop = 0.0
@@ -191,7 +193,7 @@ def singleoptimalspike(
         p = expit(y[0])  # use expit transformation to keep things in range [0,1]
         q = expit(y[1])
 
-        error, ppmperamu = errorestimate(
+        error, _ = errorestimate(
             isodata,
             p,
             q * spikevector1 + (1.0 - q) * spikevector2,

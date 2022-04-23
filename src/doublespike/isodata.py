@@ -184,8 +184,8 @@ class IsoData:
         if value is None:
             self._rawspike = None
         else:
-            rs = np.array(value)
-            self._rawspike = rs / rs.sum(axis=1)
+            rs = np.array(value).T
+            self._rawspike = (rs / rs.sum(axis=0)).T
 
     def isoindex(self, ix):
         """Give the data index corresponding to a given isotope number e.g. 56->1."""

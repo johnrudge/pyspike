@@ -105,21 +105,3 @@ def monte_single(composition, emod, n=None):
 
     datav = rng.normal(loc=datai, scale=np.sqrt(dataivar))
     return datav
-
-
-if __name__ == "__main__":
-    from .isodata import IsoData
-    from .inversion import dsinversion
-
-    idat = IsoData("Fe")
-    idat.spike = [0.0, 0.0, 0.5, 0.5]
-    idat.set_errormodel()
-    measuredv = monterun(idat, prop=0.5, alpha=-0.2, beta=1.8, n=1000)
-    print(measuredv[0:10, :])
-
-    out = dsinversion(idat, measuredv)
-    import matplotlib.pyplot as plt
-
-    plt.plot(out["alpha"])
-    plt.ylabel(r"$\alpha$")
-    plt.show()

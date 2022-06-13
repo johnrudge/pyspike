@@ -140,7 +140,7 @@ def dscorrection(P, n, T, m, **kwargs):
                    as a vector z=(lambda, (1-lambda)*alpha, beta)
     """
     # start by solving the linear problem
-    b = np.transpose((m - n))
+    b = np.transpose(m - n)
     A = np.array([T - n, -n * P, m * P])
     y0 = np.linalg.solve(A, b)
 

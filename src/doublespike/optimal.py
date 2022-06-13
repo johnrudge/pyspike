@@ -228,14 +228,3 @@ def singleoptimalspike(
     optspikeprop[isospike[1]] = 1 - q
 
     return optspike, optprop, opterr, optspikeprop, optppmperamu
-
-
-if __name__ == "__main__":
-    from .isodata import IsoData
-
-    isodata_ca = IsoData("Ca")
-    isoinv = [40, 42, 44, 48]
-
-    isospike = [2, 5]
-
-    print(optimalspike(isodata_ca, "real", isoinv=isoinv, isospike=isospike))

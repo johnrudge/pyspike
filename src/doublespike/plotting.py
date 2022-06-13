@@ -488,12 +488,3 @@ def errorcurveoptimalspike(
         ax.set_ylim(np.array([0, 5 * np.amin(os["opterr"])]))
 
     ax.legend(loc="upper right")
-
-
-if __name__ == "__main__":
-    from .isodata import IsoData
-
-    idat = IsoData("Fe")
-    errorcurveoptimalspike(idat, "real")
-    # errorcurve2d(idat)
-    plt.show()

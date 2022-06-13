@@ -326,12 +326,3 @@ def fcerrorpropagation(z, AP, An, AT, Am, VAn, VAT, VAm, invrat):
     VAM = dAMdAn @ VAn @ dAMdAn.T + dAMdAT @ VAT @ dAMdAT.T + dAMdAm @ VAm @ dAMdAm.T
 
     return Vz, VAN, VAM
-
-
-if __name__ == "__main__":
-    from .isodata import IsoData
-
-    isodata = IsoData("Fe")
-    isodata.spike = [0.0, 0.0, 0.5, 0.5]
-    alpha_err, ppm_err = errorestimate(isodata, prop=0.5, alpha=-0.2, beta=1.8)
-    print(alpha_err, ppm_err)

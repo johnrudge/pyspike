@@ -15,7 +15,7 @@ def loadrawdata(filename=None):
         resource_path = "/".join(("data", "maininput.csv"))  # Do not use os.path.join()
         filename = pkg_resources.resource_filename(resource_package, resource_path)
 
-    f = open(filename, "r")
+    f = open(filename)
     csvreader = csv.reader(f)
 
     data = {}
@@ -407,8 +407,3 @@ def ratio(data, isoidx):
     di = isoidx[0]
     ni = isoidx[1:]
     return data[..., ni] / data[..., di, np.newaxis]
-
-
-if __name__ == "__main__":
-    idat = IsoData("Fe")
-    print(idat)

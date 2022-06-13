@@ -1,8 +1,8 @@
 """Routines for performing the double spike inversion."""
 
-from .isodata import ratioproptorealprop, normalise_composition, ratio
 import numpy as np
 from scipy.optimize import fsolve, root
+from .isodata import ratioproptorealprop, normalise_composition, ratio
 
 
 def dsinversion(isodata, measured, spike=None, isoinv=None, standard=None):
@@ -38,13 +38,11 @@ def dsinversion(isodata, measured, spike=None, isoinv=None, standard=None):
     if spike is None:
         if isodata.spike is None:
             raise Exception("No spike given.")
-        else:
-            spike = isodata.spike
+        spike = isodata.spike
     if isoinv is None:
         if isodata.isoinv is None:
             raise Exception("Inversion isotopes not specified.")
-        else:
-            isoinv = isodata.isoinv
+        isoinv = isodata.isoinv
     if standard is None:
         standard = isodata.standard
 
@@ -196,14 +194,3 @@ def J(y, P, n, T, m):
     dfdu = -N * P
     dfdbeta = M * P
     return np.array([dfdlambdaprime, dfdu, dfdbeta])  # equation (15)
-
-
-if __name__ == "__main__":
-    from .isodata import IsoData
-
-    isodata_fe = IsoData("Fe")
-    isodata_fe.spike = [0.0, 0.0, 0.5, 0.5]
-    measured = np.array([0.2658, 4.4861, 2.6302, 2.6180])
-
-    z = dsinversion(isodata_fe, measured)
-    print(z)

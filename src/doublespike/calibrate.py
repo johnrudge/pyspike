@@ -1,7 +1,9 @@
+"""Module for calibrating the double spike composition."""
+
+import numpy as np
+from scipy.optimize import minimize
 from .isodata import normalise_composition, realproptoratioprop, ratioproptorealprop
 from .errors import calcratiocov
-from scipy.optimize import minimize
-import numpy as np
 
 
 def spike_calibration(
@@ -37,8 +39,7 @@ def spike_calibration(
     if isoinv is None:
         if isodata.isoinv is None:
             raise Exception("Inversion isotopes not specified.")
-        else:
-            isoinv = isodata.isoinv
+        isoinv = isodata.isoinv
     if standard is None:
         standard = isodata.standard
 
@@ -257,32 +258,3 @@ def dmt_expected_dz(z, P, n, n_m, n_t):
         dtdz[i, :, 2 * n_m + n_t :] = dindividual_t_expected_dT(betat[i], T, P)
 
     return dmdz, dtdz
-
-
-if __name__ == "__main__":
-    from .monte import monterun
-    from .isodata import IsoData
-
-    isodata = IsoData("Fe")
-    n = int(1e3)
-    true_spike = np.array([1e-3, 1e-2, 0.4, 0.6])
-    true_spike = true_spike / sum(true_spike)
-
-    spike_measurements = monterun(isodata, 1.0, true_spike, alpha=0.0, beta=0.8, n=n)
-    mixture1_measurements = monterun(isodata, 0.7, true_spike, alpha=0.0, beta=2.0, n=n)
-    mixture2_measurements = monterun(isodata, 0.5, true_spike, alpha=0.0, beta=1.5, n=n)
-
-    spike_measurement = np.mean(spike_measurements, axis=0)
-    mixture1_measurement = np.mean(mixture1_measurements, axis=0)
-    mixture2_measurement = np.mean(mixture2_measurements, axis=0)
-
-    mixture_measurement = np.vstack([mixture1_measurement, mixture2_measurement])
-
-    out = spike_calibration(isodata, spike_measurement, mixture_measurement)
-    print(out)
-    print("True spike", true_spike)
-    print("Calibrated spike", out["calibrated_spike"])
-    print(
-        "Difference between true spike and calibrated:",
-        out["calibrated_spike"] - true_spike,
-    )

@@ -194,19 +194,17 @@ class IsoData:
             quest = np.where(self.isonum == k)[0]
             if len(quest) == 0:
                 return k
-            else:
-                return quest[0]
+            return quest[0]
 
         if ix is None:
             return None
-        elif type(ix) == int:
+        if type(ix) == int:
             return isonum_to_idx(ix)
-        elif type(ix) == list:
+        if type(ix) == list:
             return [isonum_to_idx(i) for i in ix]
-        else:
-            # assume a numpy array
-            f = np.vectorize(isonum_to_idx)
-            return f(ix)
+        # assume a numpy array
+        f = np.vectorize(isonum_to_idx)
+        return f(ix)
 
     @property
     def isoname(self):
@@ -240,8 +238,7 @@ class IsoData:
         """Number of single spikes available."""
         if self.rawspike is None:
             return 0
-        else:
-            return self.rawspike.shape[0]
+        return self.rawspike.shape[0]
 
     def set_errormodel(
         self,
@@ -388,8 +385,7 @@ def normalise_composition(comp):
     s = comp.sum(axis=-1)
     if type(s) is float:
         return comp / s
-    else:
-        return comp / s[..., np.newaxis]
+    return comp / s[..., np.newaxis]
 
 
 def ratioproptorealprop(lambda_, ratio_a, ratio_b):

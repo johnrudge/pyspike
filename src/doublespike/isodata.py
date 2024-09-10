@@ -12,7 +12,7 @@ k = 1.3806504e-23  # m^2 kg s^-2 K^-1, Boltzmann constant
 def loadrawdata(filename=None):
     """Read in isotope system datafile and return a python dictionary with data."""
     if filename is None:
-        resource_package = __name__
+        resource_package = "doublespike"
         resource_path = "/".join(("data", "maininput.csv"))
         ref = importlib.resources.files(resource_package) / resource_path
         filename = importlib.resources.as_file(ref)
